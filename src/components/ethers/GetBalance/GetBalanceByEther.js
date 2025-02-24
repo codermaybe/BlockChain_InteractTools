@@ -1,5 +1,6 @@
 import { Fragment, useState } from "react";
 import { ethers } from "ethers";
+import { Input, Button } from "antd";
 
 function GetBalanceByEther() {
   const ganacheRpc = process.env.REACT_APP_ganacheRpc;
@@ -49,17 +50,16 @@ function GetBalanceByEther() {
       <div className="GBBE">
         <p> 当前RPC状态:{RpcStatus ? "✔" : "✗"}</p>
         <p> current rpc is {UserRpc}</p>
-        <input
+        <Input
           placeholder="输入自有RPC接口，默认为ganache"
           onChange={(e) => setUserRpc(e.target.value)}
         />
         <br />
-        <button onClick={CheckRpcStatus}>检查RPC可用性</button>
 
         <br />
         <p> current target address is {WalletAddress}</p>
         <p> 当前地址状态:{ethers.isAddress(WalletAddress) ? "✔" : "✗"}</p>
-        <input
+        <Input
           placeholder="输入想查询的钱包余额"
           type="text"
           value={WalletAddress}
@@ -70,7 +70,7 @@ function GetBalanceByEther() {
           {WalletAddress}
           的余额是 {balance} ETH
         </p>
-        <button onClick={getBalance}>获取余额</button>
+        <Button onClick={getBalance}>获取余额</Button>
       </div>
     </Fragment>
   );

@@ -5,6 +5,7 @@ import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
 // 引入功能组件（根据实际路径调整）
 import EthersTab from "../EtherContain/EthersTab";
 import EtherTokenTab from "../EtherContain/EtherTokenTab";
+import DeployContract from "../../components/ethers/DeployAndVerify/DeployContract";
 // import DeployContract from "./DeployContract";
 // import VerifyContract from "./VerifyContract";
 
@@ -35,6 +36,16 @@ const MENU_ITEMS = [
           { key: "verify-contract", label: "验证合约" },
         ],
       },
+      {
+        key: "group3",
+        type: "group",
+        label: "钱包",
+        children: [
+          { key: "wallet-create", label: "创建钱包" },
+          { key: "wallet-transfer", label: "转账" },
+          { key: "wallet-swap", label: "兑换" },
+        ],
+      },
     ],
   },
   {
@@ -52,7 +63,7 @@ const MENU_ITEMS = [
 const CONTENT_COMPONENTS = {
   "eth-balance": <EthersTab />,
   "token-interaction": <EtherTokenTab />,
-  "deploy-contract": <div>部署合约组件（待实现）</div>, // 替换为实际组件
+  "deploy-contract": <DeployContract />,
   "verify-contract": <div>验证合约组件（待实现）</div>, // 替换为实际组件
   "sol-balance": <div>Solana余额查询（待实现）</div>,
 };

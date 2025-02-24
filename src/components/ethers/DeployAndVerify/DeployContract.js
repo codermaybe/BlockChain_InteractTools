@@ -28,7 +28,9 @@ export default function DeployContract() {
       };
 
       // 编译合约
-      const output = JSON.parse(solc.compile(JSON.stringify(input)));
+      const output = JSON.parse(
+        solc.lowlevel.compileSingle(JSON.stringify(input))
+      );
 
       // 检查是否有编译错误
       if (output.errors) {
