@@ -1,9 +1,9 @@
 import { useState } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
-import GetBalanceByEther from "../../components/ethers/GetBalanceByEther";
-import GetBalanceByContract from "../../components/ethers/GetBalanceByContract";
-import GetBalanceByEtherscanApi from "../../components/ethers/GetBalanceByEtherscanApi";
+import GetBalanceByEther from "../../components/ethers/GetBalance/GetBalanceByEther";
+import GetBalanceByContract from "../../components/ethers/GetBalance/GetBalanceByContract";
+import GetBalanceByEtherscanApi from "../../components/ethers/GetBalance/GetBalanceByEtherscanApi";
 
 export default function EthersTab() {
   // 确保组件名称以大写字母开头

@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import { Layout, Menu, Result } from "antd";
-import {
-  AppstoreOutlined,
-  MailOutlined,
-  SettingOutlined,
-} from "@ant-design/icons";
+import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
 
 // 引入功能组件（根据实际路径调整）
 import EthersTab from "../EtherContain/EthersTab";

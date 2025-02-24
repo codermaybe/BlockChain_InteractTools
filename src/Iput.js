@@ -1,8 +1,9 @@
+//此文件测试监听区块链效果
 const { ethers } = require("ethers");
 
 // 通过Infura或Alchemy等服务提供的URL连接到以太坊网络
 const provider = new ethers.JsonRpcProvider(
-  "https://eth-mainnet.g.alchemy.com/v2/TcS1GmNT7Ai0zD4soP01_ooJ86pORzxn"
+  "https://eth-mainnet.g.alchemy.com/v2/YOUR-API-KEY"
 );
 
 // USDC 合约地址

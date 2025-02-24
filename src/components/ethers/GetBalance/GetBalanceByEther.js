@@ -1,4 +1,4 @@
-import { Fragment, useState, useRef } from "react";
+import { Fragment, useState } from "react";
 import { ethers } from "ethers";
 
 function GetBalanceByEther() {
@@ -30,7 +30,7 @@ function GetBalanceByEther() {
     let provider = new ethers.JsonRpcProvider(UserRpc);
     try {
       // 尝试获取当前区块号来检查 RPC 是否正常
-      const blockNumber = await provider.getBlockNumber();
+      await provider.getBlockNumber();
       //console.log("RPC 连接正常，当前区块号是：", blockNumber);
 
       await setRpcStatus(true);
