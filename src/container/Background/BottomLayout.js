@@ -1,167 +1,106 @@
 import React, { useState } from "react";
+import { Layout, Menu, Result } from "antd";
 import {
   AppstoreOutlined,
   MailOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import { Layout, Menu, Result } from "antd";
+
+// 引入功能组件（根据实际路径调整）
 import EthersTab from "../EtherContain/EthersTab";
 import EtherTokenTab from "../EtherContain/EtherTokenTab";
-import DeployContract from "../../components/ethers/DeployAndVerify/DeployContract";
+// import DeployContract from "./DeployContract";
+// import VerifyContract from "./VerifyContract";
 
 const { Sider, Content } = Layout;
 
-const items = [
+// 菜单配置（集中管理）
+const MENU_ITEMS = [
   {
-    key: "sub1",
+    key: "ethereum",
     label: "以太坊",
     icon: <MailOutlined />,
     children: [
       {
-        key: "g1",
-        label: "简单交互",
+        key: "group1",
         type: "group",
+        label: "简单交互",
         children: [
-          {
-            key: "1",
-            label: "ETH查询余额",
-          },
-          {
-            key: "2",
-            label: "代币（Token）函数调用",
-          },
+          { key: "eth-balance", label: "ETH查询余额" },
+          { key: "token-interaction", label: "代币函数调用" },
         ],
       },
       {
-        key: "g2",
-        label: "快速部署",
+        key: "group2",
         type: "group",
+        label: "快速部署",
         children: [
-          {
-            key: "3",
-            label: "部署合约",
-          },
-          {
-            key: "4",
-            label: "验证合约",
-          },
+          { key: "deploy-contract", label: "部署合约" },
+          { key: "verify-contract", label: "验证合约" },
         ],
       },
     ],
   },
   {
-    key: "sub2",
-    label: "Navigation Two",
+    key: "solana",
+    label: "Solana",
     icon: <AppstoreOutlined />,
     children: [
-      {
-        key: "5",
-        label: "Option 5",
-      },
-      {
-        key: "sub3",
-        label: "Submenu",
-        children: [
-          {
-            key: "7",
-            label: "Option 7",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    type: "divider",
-  },
-  {
-    key: "sub4",
-    label: "Navigation Three",
-    icon: <SettingOutlined />,
-    children: [
-      {
-        key: "9",
-        label: "Option 9",
-      },
-    ],
-  },
-  {
-    key: "grp",
-    label: "Group",
-    type: "group",
-    children: [
-      {
-        key: "13",
-        label: "Option 13",
-      },
-      {
-        key: "14",
-        label: "Option 14",
-      },
+      { key: "sol-balance", label: "查询余额" },
+      // 更多Solana菜单项...
     ],
   },
 ];
 
-const BottomLayout = () => {
-  // 状态管理当前选中的菜单项
-  const [selectedKey, setSelectedKey] = useState("1");
+// 内容映射配置
+const CONTENT_COMPONENTS = {
+  "eth-balance": <EthersTab />,
+  "token-interaction": <EtherTokenTab />,
+  "deploy-contract": <div>部署合约组件（待实现）</div>, // 替换为实际组件
+  "verify-contract": <div>验证合约组件（待实现）</div>, // 替换为实际组件
+  "sol-balance": <div>Solana余额查询（待实现）</div>,
+};
 
-  const onClick = (e) => {
-    console.log("click ", e);
-    setSelectedKey(e.key); // 更新选中项
+const BottomLayout = () => {
+  // 状态管理
+  const [activeKey, setActiveKey] = useState("eth-balance");
+  const [openKeys, setOpenKeys] = useState(["ethereum"]);
+
+  // 菜单点击处理
+  const handleMenuClick = ({ key }) => {
+    setActiveKey(key);
   };
 
-  // 根据选中的菜单项渲染右侧内容
+  // 菜单展开处理
+  const handleOpenChange = (keys) => {
+    setOpenKeys(keys);
+  };
+
+  // 渲染内容区域
   const renderContent = () => {
-    switch (selectedKey) {
-      case "1":
-        return (
-          <div>
-            <EthersTab />
-          </div>
-        );
-      case "2":
-        return (
-          <div>
-            <EtherTokenTab />
-          </div>
-        );
-      case "3":
-        return (
-          <div>
-            <DeployContract />
-          </div>
-        );
-      case "5":
-        return <div>Option 5 的内容</div>;
-      case "7":
-        return <div>Submenu 的内容</div>;
-      default:
-        return <Result status="404" title="404" subTitle="本页未更新." />; // 默认内容
-    }
+    return (
+      CONTENT_COMPONENTS[activeKey] || (
+        <Result status="404" title="功能开发中" />
+      )
+    );
   };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      {/* 左侧的菜单栏 */}
-      <Sider width={256} style={{ background: "#fff" }}>
+      <Sider width={256} theme="light">
         <Menu
-          onClick={onClick}
-          style={{
-            width: "100%",
-          }}
-          defaultSelectedKeys={["1"]}
-          defaultOpenKeys={["sub1"]}
           mode="inline"
-          items={items}
+          selectedKeys={[activeKey]}
+          openKeys={openKeys}
+          onOpenChange={handleOpenChange}
+          onClick={handleMenuClick}
+          items={MENU_ITEMS}
         />
       </Sider>
 
-      {/* 右侧的主内容区域 */}
-      <Layout>
-        <Content style={{ padding: "24px", background: "#f0f2f5" }}>
-          {renderContent()} {/* 动态渲染内容 */}
-        </Content>
-      </Layout>
+      <Content style={{ padding: 24, background: "#fff" }}>
+        {renderContent()}
+      </Content>
     </Layout>
   );
 };
