@@ -8,7 +8,8 @@ import EtherTokenTab from "../EtherContain/EtherTokenTab";
 import DeployContract from "../../components/ethers/DeployAndVerify/DeployContract";
 // import DeployContract from "./DeployContract";
 // import VerifyContract from "./VerifyContract";
-import WalletCreate from "../../components/ethers/walletfunctions/WalletCreate";
+
+import WalletBasicTab from "../EtherContain/WalletBasicTab";
 const { Sider, Content } = Layout;
 
 // 菜单配置（集中管理）
@@ -41,9 +42,8 @@ const MENU_ITEMS = [
         type: "group",
         label: "钱包",
         children: [
-          { key: "wallet-create", label: "创建钱包" },
-          { key: "wallet-transfer", label: "转账" },
-          { key: "wallet-swap", label: "兑换" },
+          { key: "wallet-basicfunction", label: "基础功能" },
+          { key: "wallet-transfer", label: "进阶功能" },
         ],
       },
     ],
@@ -65,7 +65,7 @@ const CONTENT_COMPONENTS = {
   "token-interaction": <EtherTokenTab />,
   "deploy-contract": <DeployContract />,
   "verify-contract": <div>验证合约组件（待实现）</div>, // 替换为实际组件
-  "wallet-create": <WalletCreate />,
+  "wallet-basicfunction": <WalletBasicTab />,
 
   "sol-balance": <div>Solana余额查询（待实现）</div>,
 };
