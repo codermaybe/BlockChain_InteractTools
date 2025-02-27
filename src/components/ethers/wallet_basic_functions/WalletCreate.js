@@ -29,7 +29,14 @@ export default function WalletCreate() {
 
   return (
     <div>
-      <Card title="钱包创建" bordered={false}>
+      <br />
+      <Card
+        title="钱包创建"
+        bordered={false}
+        style={{
+          border: "1px solid #1890ff",
+        }}
+      >
         {/* 钱包地址 */}
         <p>
           钱包地址：{walletAddress}

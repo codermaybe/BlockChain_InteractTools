@@ -3,6 +3,7 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import WalletCreate from "../../components/ethers/wallet_basic_functions/WalletCreate";
 import WalletRecover from "../../components/ethers/wallet_basic_functions/WalletRecover";
+import WalletTransfer from "../../components/ethers/wallet_basic_functions/WalletTransfer";
 
 const WalletBasicTab = () => {
   const [index, setIndex] = useState("A");
@@ -25,7 +26,7 @@ const WalletBasicTab = () => {
           <WalletCreate />
         </div>
       )}
-      {index === "B" && <div></div>}
+      {index === "B" && <WalletTransfer />}
       {index === "C" && (
         <div>
           <WalletRecover />
