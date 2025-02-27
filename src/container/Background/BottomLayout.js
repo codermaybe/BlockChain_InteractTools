@@ -10,6 +10,7 @@ import DeployContract from "../../components/ethers/DeployAndVerify/DeployContra
 // import VerifyContract from "./VerifyContract";
 
 import WalletBasicTab from "../EtherContain/WalletBasicTab";
+import WalletUpgrateTab from "../EtherContain/WalletUpgrateTab";
 const { Sider, Content } = Layout;
 
 // 菜单配置（集中管理）
@@ -43,7 +44,7 @@ const MENU_ITEMS = [
         label: "钱包",
         children: [
           { key: "wallet-basicfunction", label: "基础功能" },
-          { key: "wallet-transfer", label: "进阶功能" },
+          { key: "wallet-upgratefunction", label: "进阶功能" },
         ],
       },
     ],
@@ -66,6 +67,7 @@ const CONTENT_COMPONENTS = {
   "deploy-contract": <DeployContract />,
   "verify-contract": <div>验证合约组件（待实现）</div>, // 替换为实际组件
   "wallet-basicfunction": <WalletBasicTab />,
+  "wallet-upgratefunction": <WalletUpgrateTab />,
 
   "sol-balance": <div>Solana余额查询（待实现）</div>,
 };
