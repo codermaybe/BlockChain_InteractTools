@@ -1,85 +1,89 @@
 import React, { useState } from "react";
+import { Button, Input, Typography, message, Form, Select } from "antd";
+import { isAddress } from "ethers"; // 使用 ethers v6 的 isAddress
+
+const { Title, Paragraph } = Typography;
+
+// 网络选项常量
+const NETWORK_OPTIONS = [
+  { value: "mainnet", label: "Mainnet" }, // 修改为 "mainnet"
+  { value: "sepolia.", label: "Sepolia" },
+  { value: "Goerli.", label: "Goerli" },
+];
 
 export default function VerifyContract() {
-  const [contractAddress, setContractAddress] = useState("");
-  const [solidityCode, setSolidityCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [form] = Form.useForm();
 
-  const handleVerifyOnEtherscan = () => {
-    if (!contractAddress.trim()) {
-      alert("请输入合约地址");
-      return;
+  const handleVerifyOnEtherscan = async () => {
+    try {
+      setLoading(true);
+      const { contractAddress, network } = await form.validateFields();
+
+      // 验证合约地址
+      if (!isAddress(contractAddress)) {
+        message.error("请输入有效的合约地址 (0x...)");
+        return;
+      }
+
+      // 跳转到 Etherscan 的验证页面
+      const etherscanUrl = `https://${
+        network === "mainnet" ? "" : network
+      }etherscan.io/verifyContract?a=${contractAddress}`;
+      window.open(etherscanUrl, "_blank");
+    } catch (error) {
+      message.error("请检查输入内容");
+    } finally {
+      setLoading(false);
     }
-    if (!solidityCode.trim()) {
-      alert("请输入 Solidity 源代码");
-      return;
-    }
-
-    // 跳转到 Etherscan 的验证页面
-    window.open("https://etherscan.io/verifyContract", "_blank");
-  };
-
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      alert("已复制到剪贴板！");
-    });
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h2>验证智能合约</h2>
-      <p>
+    <div>
+      <Title level={2}>验证智能合约（暂停开发）</Title>
+      <Paragraph>
         输入你的合约地址和源代码后，点击下方按钮，将在新标签页中打开 Etherscan
-        的合约验证页面。 请按照页面提示完成验证。
-      </p>
-      <div style={{ marginBottom: "20px" }}>
-        <label>合约地址</label>
-        <div
-          style={{ display: "flex", alignItems: "center", marginTop: "5px" }}
+        的合约验证页面。请按照页面提示完成验证。
+      </Paragraph>
+
+      <Form form={form} layout="vertical">
+        {/* 网络选择器 */}
+        <Form.Item
+          name="network"
+          label="网络"
+          rules={[{ required: true, message: "请选择网络" }]}
         >
-          <input
-            type="text"
-            value={contractAddress}
-            onChange={(e) => setContractAddress(e.target.value)}
-            placeholder="请输入合约地址 (0x...)"
-            style={{ width: "100%", padding: "8px" }}
-          />
-          <button
-            onClick={() => handleCopy(contractAddress)}
-            style={{ marginLeft: "10px" }}
-          >
-            复制地址
-          </button>
-        </div>
-      </div>
-      <div style={{ marginBottom: "20px" }}>
-        <label>源代码</label>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            marginTop: "5px",
-          }}
+          <Select placeholder="请选择网络" options={NETWORK_OPTIONS} />
+        </Form.Item>
+
+        {/* 合约地址输入框 */}
+        <Form.Item
+          name="contractAddress"
+          label="合约地址"
+          rules={[
+            { required: true, message: "请输入合约地址" },
+            {
+              validator: (_, value) =>
+                isAddress(value)
+                  ? Promise.resolve()
+                  : Promise.reject("请输入有效的合约地址 (0x...)"),
+            },
+          ]}
         >
-          <textarea
-            rows={10}
-            cols={50}
-            value={solidityCode}
-            onChange={(e) => setSolidityCode(e.target.value)}
-            placeholder="请输入 Solidity 源代码"
-            style={{ width: "100%", fontFamily: "monospace" }}
-          />
-          <button
-            onClick={() => handleCopy(solidityCode)}
-            style={{ marginLeft: "10px" }}
+          <Input placeholder="请输入合约地址 (0x...)" />
+        </Form.Item>
+
+        {/* 验证按钮 */}
+        <Form.Item>
+          <Button
+            type="primary"
+            onClick={handleVerifyOnEtherscan}
+            loading={loading}
           >
-            复制代码
-          </button>
-        </div>
-      </div>
-      <button onClick={handleVerifyOnEtherscan} style={{ marginTop: "10px" }}>
-        前往 Etherscan 验证
-      </button>
-      <iframe src="https://etherscan.io/verifyContract"></iframe>
+            前往 Etherscan 验证
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
 }

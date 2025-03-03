@@ -1,4 +1,11 @@
 # 用以纪录每次更新的*功能变化* 以及 *计划*
+## 更新计划表
+-   计划引入1inch/uniswap的闪兑功能
+-   
+
+
+
+
 
 ## 更新记录4
   
@@ -11,8 +18,10 @@
     先调用remix部署工具，后续研究
 - VerifyContract 功能受阻
   1.尝试  
-  2.[etherscan 合约验证](https://etherscan.io/verifyContract) ethercan的合约验证功能无法通过iframe框架嵌入进工具，原因是Etherscan 的 https://etherscan.io/verifyContract 页面设置了 X-Frame-Options: DENY 或SAMEORIGIN 。
+  2.[etherscan 合约验证](https://etherscan.io/verifyContract) ethercan的合约验证功能无法通过iframe框架嵌入进工具，原因是Etherscan 的 https://etherscan.io/verifyContract 页面设置了 X-Frame-Options: SAMEORIGIN 。
   ![alt text](./src/ExtraContent/ErrorsRecord/尝试嵌入etherscanVerify.png)
+
+  后续考虑引入hardhat工具实现验证和部署功能
 
 ## 更新记录3
 -  引入bip39标准（助记词生成）
