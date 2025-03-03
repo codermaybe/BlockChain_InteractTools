@@ -1,0 +1,14 @@
+{
+    "env": {
+      "es2020": true,  // 启用 ES2020 环境，支持 BigInt
+      "browser": true,
+      "node": true
+    },
+    "parserOptions": {
+      "ecmaVersion": 2020,  // 支持 ES2020 语法
+      "sourceType": "module"
+    },
+    "rules": {
+      "no-undef": "error"  // 保持 no-undef 规则
+    }
+  }
