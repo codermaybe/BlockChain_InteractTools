@@ -11,6 +11,7 @@ import DeployContract from "../../components/ethers/DeployAndVerify/DeployContra
 
 import WalletBasicTab from "../EtherContain/WalletBasicTab";
 import WalletUpgrateTab from "../EtherContain/WalletUpgrateTab";
+import VerifyContract from "../../components/ethers/DeployAndVerify/VerifyContract";
 const { Sider, Content } = Layout;
 
 // 菜单配置（集中管理）
@@ -65,7 +66,7 @@ const CONTENT_COMPONENTS = {
   "eth-balance": <EthersTab />,
   "token-interaction": <EtherTokenTab />,
   "deploy-contract": <DeployContract />,
-  "verify-contract": <div>验证合约组件（待实现）</div>, // 替换为实际组件
+  "verify-contract": <VerifyContract />, // 替换为实际组件
   "wallet-basicfunction": <WalletBasicTab />,
   "wallet-upgratefunction": <WalletUpgrateTab />,
 
