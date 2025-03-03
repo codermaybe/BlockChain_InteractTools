@@ -2,6 +2,7 @@ import { useState } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import WalletTransactionHistory from "../../components/ethers/wallet_upgrate_functions/WalletTransactionHistory";
+import ContractEventListener from "../../Iput";
 
 const WalletUpgrateTab = () => {
   const [index, setIndex] = useState("A");
@@ -24,7 +25,11 @@ const WalletUpgrateTab = () => {
           <WalletTransactionHistory />
         </div>
       )}
-      {index === "B" && <div></div>}
+      {index === "B" && (
+        <div>
+          <ContractEventListener />
+        </div>
+      )}
       {index === "C" && <div></div>}
     </>
   );

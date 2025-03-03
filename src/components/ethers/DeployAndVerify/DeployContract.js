@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import solc from "solc-js";
-import { ethers } from "ethers";
+//import { ethers } from "ethers";
 
 export default function DeployContract() {
   const [solidityCode, setSolidityCode] = useState("");
