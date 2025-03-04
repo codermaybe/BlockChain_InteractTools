@@ -2,7 +2,7 @@ import { useState } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import WalletTransactionHistory from "../../components/ethers/wallet_upgrate_functions/WalletTransactionHistory";
-import ContractEventListener from "../../Iput";
+import ContractEventListener from "../../components/ethers/wallet_upgrate_functions/ContractEventListener";
 
 const WalletUpgrateTab = () => {
   const [index, setIndex] = useState("A");
