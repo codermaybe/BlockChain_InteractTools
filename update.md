@@ -1,4 +1,6 @@
 # 用以纪录每次更新的*功能变化* 以及 *计划*
+
+
 ## 更新计划表
 -   计划引入1inch/uniswap的闪兑功能
 -    
@@ -8,7 +10,15 @@
 
 
 ## 更新记录4
-  
+-  尝试更新合约监听功能时遇阻  
+``@TODO Error: could not coalesce error (error={ "code": -32000, "message": "filter not found" }, payload={ "id": 8, "jsonrpc": "2.0", "method": "eth_getFilterChanges", "params": [ "0x43ab9106f753ccd6432590094471b40" ] }, code=UNKNOWN_ERROR, version=6.13.4)
+    at makeError (errors.js:128:1)
+    at JsonRpcProvider.getRpcError (provider-jsonrpc.js:811:1)
+    at provider-jsonrpc.js:314:1``
+  原因:httpurl 过滤器周期过短
+
+- 重新尝试，更换rpc接口为infura，获取成功。尝试修复bug
+
 ### 部署与验证问题
 -  DeployContract 功能受阻
     WebAssembly.Compile is disallowed on the main thread, if the buffer size is larger than 8MB. Use WebAssembly.compile, compile on a worker thread, or use the flag `--enable-features=WebAssemblyUnlimitedSyncCompilation`. 
