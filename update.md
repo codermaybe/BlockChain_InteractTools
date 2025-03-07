@@ -17,7 +17,7 @@
     at provider-jsonrpc.js:314:1``
   原因:httpurl 过滤器周期过短
 
-- 重新尝试，更换rpc接口为infura，获取成功。尝试修复bug
+- 重新尝试，更换rpc接口为infura，获取成功。后续更新更健全的版本
 
 ### 部署与验证问题
 -  DeployContract 功能受阻
