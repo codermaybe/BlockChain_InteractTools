@@ -14,7 +14,7 @@ import {
 import axios from "axios";
 import { ethers } from "ethers";
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { Option } = Select;
 
 export default function WalletTransactionHistory() {
@@ -34,23 +34,35 @@ export default function WalletTransactionHistory() {
       api: "api.etherscan.io",
       explorer: "https://etherscan.io/tx/",
       rpc: "https://eth-mainnet.g.alchemy.com/v2/YOUR_ALCHEMY_KEY",
+      chainId: 1,
+      currency: "ETH",
+      decimals: 18,
     },
     sepolia: {
       name: "Sepolia Testnet",
       api: "api-sepolia.etherscan.io",
       explorer: "https://sepolia.etherscan.io/tx/",
       rpc: "https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY",
+      chainId: 11155111,
+      currency: "ETH",
+      decimals: 18,
     },
     goerli: {
       name: "Goerli Testnet",
       api: "api-goerli.etherscan.io",
       explorer: "https://goerli.etherscan.io/tx/",
       rpc: "https://eth-goerli.g.alchemy.com/v2/YOUR_ALCHEMY_KEY",
+      chainId: 5,
+      currency: "ETH",
+      decimals: 18,
     },
     local: {
       name: "Local Hardhat",
       rpc: "http://127.0.0.1:8545",
       explorer: null,
+      chainId: 31337,
+      currency: "ETH",
+      decimals: 18,
     },
   };
 
@@ -63,13 +75,22 @@ export default function WalletTransactionHistory() {
   // 格式化时间函数
   const formatDate = (timestamp) => {
     try {
-      const timestampSec = parseInt(timestamp); // 转为数字
+      const timestampSec = parseInt(timestamp);
       if (isNaN(timestampSec) || timestampSec <= 0) {
         return "未知";
       }
-      const date = new Date(timestampSec * 1000); // 秒转毫秒
+      // 检查时间戳是否在合理范围内
+      const now = Math.floor(Date.now() / 1000);
+      if (timestampSec > now + 86400) {
+        // 未来24小时
+        return "未知";
+      }
+      const date = new Date(timestampSec * 1000);
+      if (isNaN(date.getTime())) {
+        return "未知";
+      }
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // 月份从 0 开始
+      const month = String(date.getMonth() + 1).padStart(2, "0");
       const day = String(date.getDate()).padStart(2, "0");
       const hours = String(date.getHours()).padStart(2, "0");
       const minutes = String(date.getMinutes()).padStart(2, "0");
@@ -77,6 +98,16 @@ export default function WalletTransactionHistory() {
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     } catch {
       return "未知";
+    }
+  };
+
+  // 验证网络配置
+  const validateNetwork = async (provider, network) => {
+    try {
+      const networkInfo = await provider.getNetwork();
+      return networkInfo.chainId === networkOptions[network].chainId;
+    } catch (error) {
+      return false;
     }
   };
 
@@ -102,7 +133,7 @@ export default function WalletTransactionHistory() {
       title: "时间",
       dataIndex: "timestamp",
       key: "timestamp",
-      render: (text) => text || "未知", // 如果 timestamp 为空，显示 "未知"
+      render: (text) => text || "未知",
     },
     {
       title: "发送者",
@@ -168,7 +199,6 @@ export default function WalletTransactionHistory() {
 
     try {
       const response = await axios.get(url);
-      console.log("Etherscan response:", response.data);
       if (response.data.status === "1") {
         if (response.data.result.length === 0) {
           message.warning("未找到交易记录，请确认地址和网络是否正确");
@@ -178,7 +208,7 @@ export default function WalletTransactionHistory() {
         const allTransactions = response.data.result;
         const limitedTransactions = allTransactions.map((tx) => ({
           ...tx,
-          timestamp: formatDate(tx.timeStamp), // 使用 timeStamp 字段
+          timestamp: formatDate(tx.timeStamp),
         }));
         if (transactionLimit === "ten") {
           setTransactions(limitedTransactions.slice(0, 10));
@@ -191,21 +221,44 @@ export default function WalletTransactionHistory() {
           `查询 ${networkOptions[network].name} 交易成功，显示 ${limitedTransactions.length} 条记录`
         );
       } else {
-        message.warning(`Etherscan 查询失败: ${response.data.message}`);
+        let errorMessage = "Etherscan 查询失败";
+        switch (response.data.message) {
+          case "No transactions found":
+            errorMessage = "未找到交易记录";
+            break;
+          case "Invalid API Key":
+            errorMessage = "API Key 无效";
+            break;
+          case "Rate limit exceeded":
+            errorMessage = "API 调用次数超限";
+            break;
+          default:
+            errorMessage = response.data.message;
+        }
+        message.warning(errorMessage);
         setTransactions([]);
       }
     } catch (error) {
-      if (error.response && error.response.status === 429) {
-        message.error("Etherscan API 速率限制，请稍后再试或升级账户");
-      } else if (
-        error.response &&
-        error.response.data.message.includes("Invalid API Key")
-      ) {
-        message.error("Etherscan API Key 无效，请检查后重试");
+      if (error.response) {
+        switch (error.response.status) {
+          case 429:
+            message.error("API 调用频率超限，请稍后再试");
+            break;
+          case 403:
+            message.error("API Key 无效或已过期");
+            break;
+          case 404:
+            message.error("API 端点不存在");
+            break;
+          default:
+            message.error(
+              `查询失败: ${error.response.data.message || error.message}`
+            );
+        }
+      } else if (error.request) {
+        message.error("网络请求失败，请检查网络连接");
       } else {
-        message.error(
-          `查询 ${networkOptions[network].name} 失败: ${error.message}`
-        );
+        message.error(`查询失败: ${error.message}`);
       }
       setTransactions([]);
     } finally {
@@ -236,6 +289,15 @@ export default function WalletTransactionHistory() {
       const provider = new ethers.JsonRpcProvider(rpcUrl);
       await provider.getBlockNumber();
 
+      // 只在 Etherscan 模式下验证网络
+      if (dataSource === "etherscan") {
+        const isValidNetwork = await validateNetwork(provider, network);
+        if (!isValidNetwork) {
+          message.error("RPC 节点与选择的网络不匹配");
+          return;
+        }
+      }
+
       const latestBlock = await provider.getBlockNumber();
       const limit =
         transactionLimit === "ten"
@@ -245,15 +307,18 @@ export default function WalletTransactionHistory() {
           : 500;
       const startBlock = Math.max(0, latestBlock - limit);
 
-      console.log(`RPC 查询范围: ${startBlock} - ${latestBlock}`);
+      // 使用 Promise.all 并行获取区块
+      const blockPromises = [];
+      for (let i = startBlock; i <= latestBlock; i++) {
+        blockPromises.push(provider.getBlock(i, true));
+      }
 
-      let allTransactions = [];
+      const blocks = await Promise.all(blockPromises);
       const addressLower = address.toLowerCase();
 
-      for (let i = startBlock; i <= latestBlock; i++) {
-        const block = await provider.getBlock(i, true);
+      let allTransactions = [];
+      blocks.forEach((block) => {
         if (block && block.transactions && block.transactions.length > 0) {
-          console.log(`Block ${i}: ${block.transactions.length} transactions`);
           const txs = block.transactions
             .filter((tx) => {
               const from = tx.from ? tx.from.toLowerCase() : "";
@@ -262,17 +327,27 @@ export default function WalletTransactionHistory() {
             })
             .map((tx) => ({
               hash: tx.hash,
-              timestamp: formatDate(block.timestamp), // 使用 block.timestamp
+              timestamp: formatDate(block.timestamp),
               from: tx.from || "未知",
               to: tx.to || null,
               value: tx.value.toString(),
+              gasUsed: tx.gasUsed?.toString(),
+              gasPrice: tx.gasPrice?.toString(),
             }));
           allTransactions = allTransactions.concat(txs);
-
-          if (transactionLimit !== "all" && allTransactions.length >= limit) {
-            break;
-          }
         }
+      });
+
+      // 按时间戳排序
+      allTransactions.sort((a, b) => {
+        const timeA = new Date(a.timestamp).getTime();
+        const timeB = new Date(b.timestamp).getTime();
+        return timeB - timeA;
+      });
+
+      // 限制返回数量
+      if (transactionLimit !== "all") {
+        allTransactions = allTransactions.slice(0, limit);
       }
 
       if (allTransactions.length === 0) {
@@ -306,14 +381,7 @@ export default function WalletTransactionHistory() {
   };
 
   return (
-    <div
-      style={{
-        margin: "20px",
-
-        marginLeft: "0",
-        marginRight: "auto",
-      }}
-    >
+    <div style={{ margin: "20px", marginLeft: "0", marginRight: "auto" }}>
       <Title level={3}>钱包交易记录查询</Title>
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Alert

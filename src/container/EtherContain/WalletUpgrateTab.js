@@ -21,16 +21,8 @@ const WalletUpgrateTab = () => {
       </Tabs>
 
       {/* 根据选中的 tab 显示不同内容 */}
-      {index === "A" && (
-        <div>
-          <WalletTransactionHistory />
-        </div>
-      )}
-      {index === "B" && (
-        <div>
-          <ContractEventListener />
-        </div>
-      )}
+      {index === "A" && <WalletTransactionHistory />}
+      {index === "B" && <ContractEventListener />}
       {index === "C" && <Erc20Aggregator />}
     </>
   );

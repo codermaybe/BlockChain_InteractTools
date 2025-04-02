@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { Button, Card, message } from "antd";
+import { Button, Card, message, QRCode } from "antd";
 import { useState } from "react";
 
 export default function WalletCreate() {
@@ -38,6 +38,7 @@ export default function WalletCreate() {
         }}
       >
         {/* 钱包地址 */}
+        <QRCode value={walletAddress}></QRCode>
         <p>
           钱包地址：{walletAddress}
           <Button

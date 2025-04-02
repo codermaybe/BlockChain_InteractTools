@@ -4,6 +4,7 @@ import Tab from "@mui/material/Tab";
 import WalletCreate from "../../components/ethers/wallet_basic_functions/WalletCreate";
 import WalletRecover from "../../components/ethers/wallet_basic_functions/WalletRecover";
 import WalletTransfer from "../../components/ethers/wallet_basic_functions/WalletTransfer";
+import EthereumBasicData from "../../components/ethers/wallet_basic_functions/EthereumBasicData";
 
 const WalletBasicTab = () => {
   const [index, setIndex] = useState("A");
@@ -18,6 +19,7 @@ const WalletBasicTab = () => {
         <Tab label="生成钱包" value="A" />
         <Tab label="转账" value="B" />
         <Tab label="钱包助记词/私钥恢复" value="C" />
+        <Tab label="基础数据查询" value="D" />
       </Tabs>
 
       {/* 根据选中的 tab 显示不同内容 */}
@@ -32,6 +34,7 @@ const WalletBasicTab = () => {
           <WalletRecover />
         </div>
       )}
+      {index === "D" && <EthereumBasicData />}
     </>
   );
 };
