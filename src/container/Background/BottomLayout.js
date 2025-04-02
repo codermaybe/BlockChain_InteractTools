@@ -1,20 +1,23 @@
 import React, { useState } from "react";
-import { Layout, Menu, Result } from "antd";
-import { AppstoreOutlined, MailOutlined } from "@ant-design/icons";
+import { Layout, Menu, Result, Button } from "antd";
+import {
+  AppstoreOutlined,
+  MailOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
 
-// 引入功能组件（根据实际路径调整）
+// 引入功能组件
 import EthersTab from "../EtherContain/EthersTab";
 import EtherTokenTab from "../EtherContain/EtherTokenTab";
 import DeployContract from "../../components/ethers/DeployAndVerify/DeployContract";
-// import DeployContract from "./DeployContract";
-// import VerifyContract from "./VerifyContract";
-
 import WalletBasicTab from "../EtherContain/WalletBasicTab";
 import WalletUpgrateTab from "../EtherContain/WalletUpgrateTab";
 import VerifyContract from "../../components/ethers/DeployAndVerify/VerifyContract";
+import SolanaTab from "../SolanaContain/SolanaTab";
+
 const { Sider, Content } = Layout;
 
-// 菜单配置（集中管理）
+// 菜单配置
 const MENU_ITEMS = [
   {
     key: "ethereum",
@@ -54,10 +57,7 @@ const MENU_ITEMS = [
     key: "solana",
     label: "Solana",
     icon: <AppstoreOutlined />,
-    children: [
-      { key: "sol-balance", label: "查询余额" },
-      // 更多Solana菜单项...
-    ],
+    children: [{ key: "sol-balance", label: "余额查询" }],
   },
 ];
 
@@ -66,14 +66,13 @@ const CONTENT_COMPONENTS = {
   "eth-balance": <EthersTab />,
   "token-interaction": <EtherTokenTab />,
   "deploy-contract": <DeployContract />,
-  "verify-contract": <VerifyContract />, // 替换为实际组件
+  "verify-contract": <VerifyContract />,
   "wallet-basicfunction": <WalletBasicTab />,
   "wallet-upgratefunction": <WalletUpgrateTab />,
-
-  "sol-balance": <div>Solana余额查询（待实现）</div>,
+  "sol-balance": <SolanaTab />,
 };
 
-const BottomLayout = () => {
+const BottomLayout = ({ wallet, onLogout }) => {
   // 状态管理
   const [activeKey, setActiveKey] = useState("eth-balance");
   const [openKeys, setOpenKeys] = useState(["ethereum"]);
