@@ -1,0 +1,62 @@
+name: Tauri Nightly (Artifacts)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Nightly (${{ matrix.platform }})
+    runs-on: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-22.04, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Sync versions (package.json -> Tauri files)
+        run: node scripts/sync-version.js
+
+      - name: Build bundles
+        run: npm run tauri:build
+
+      - name: Upload bundles (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-bundles-${{ matrix.platform }}
+          path: |
+            src-tauri/target/release/bundle/**
+
+    # If you want a prerelease on every push, replace the two steps above with tauri-action like in release workflow,
+    # and set `prerelease: true`, `releaseDraft: false`, and use a tag like `nightly-${{ github.sha }}`.
+
