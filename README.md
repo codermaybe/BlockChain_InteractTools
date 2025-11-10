@@ -4,7 +4,7 @@
 
 **当前状态**
 - 仅保留主分支 `main`，历史快照以 tag 方式保留：`pre-merge-master`、`pre-merge-tauri-version`、发布点 `v0.2.7`。
-- `src-tauri/` 已并入，Tauri 与 CRA 联动开发，端口一致为 `9754`。
+- 已迁移到 Vite（保留 CRA 以便回退），Tauri 联动端口为 `9754`。
 
 **功能概览（持续完善）**
 - 钱包基础：创建、助记词恢复、转账、基础数据
@@ -26,23 +26,24 @@
 - `.env`：本地环境变量（含 `PORT=9754`）
 
 ## 环境要求
-- Node.js 18+ 与 npm（或 pnpm/yarn 自行替代）
+- Node.js ≥ 20.18（推荐 20.18.0）与 npm（或 pnpm/yarn 自行替代）
 - Rust 稳定版工具链：`rustup`, `cargo`
 - Windows（开发/打包）：需安装 Visual Studio C++ 构建工具（Desktop development with C++）
 
 ## 快速开始
 - 安装依赖：
   - `npm install`
-- 开发（浏览器预览）：
-  - `npm start` → `http://localhost:9754`
-  - 由 `.env:1` 中 `PORT=9754` 指定端口
-- 开发（桌面版调试）：
+- 开发（Vite 浏览器预览，推荐）：
+  - `npm run dev:vite` → `http://localhost:9754`
+- 开发（Tauri 桌面版调试，走 Vite）：
   - `npm run tauri:dev`
-  - Tauri 会执行 `beforeDevCommand: npm start` 并指向 `devUrl: http://localhost:9754`
-- 构建（Web 静态站点）：
-  - `npm run build` → 输出到 `build/`
+- 构建（Web 静态站点 via Vite）：
+  - `npm run build:vite` → 输出到 `dist/`
 - 构建（Tauri 桌面应用）：
   - `npm run tauri:build` → 输出到 `src-tauri/target/release/bundle/`
+- 兼容保留（可选）：
+  - CRA 开发：`npm start`（端口仍取 `.env` 中 `PORT=9754`）
+  - CRA 构建：`npm run build` → `build/`
 
 ## 版本管理（自动同步）
 - 版本统一以 `package.json:1` 为准，执行 `npm version` 自动同步到：
@@ -64,18 +65,22 @@
 ## 关键配置
 - 端口（开发）：
   - `.env:1` 设置 `PORT=9754`
-  - `src-tauri/tauri.conf.json:1` → `build.devUrl = "http://localhost:9754"`
+  - `src-tauri/tauri.conf.json:6` → `build.devUrl = "http://localhost:9754"`
 - 构建路径（生产）：
-  - CRA 输出 `build/`
-  - `src-tauri/tauri.conf.json:1` → `build.frontendDist = "../build"`
-- 常用脚本（`package.json:1`）：
-  - `start`、`build`（CRA）
-  - `tauri`、`tauri:dev`、`tauri:build`（Tauri）
+  - Vite 输出 `dist/`（`src-tauri/tauri.conf.json:6` → `build.frontendDist = "../dist"`）
+  - CRA 输出 `build/`（兼容保留）
+- 常用脚本（`package.json:33` 起）：
+  - Vite：`dev:vite`、`build:vite`、`preview:vite`
+  - CRA：`start`、`build`
+  - Tauri：`tauri:dev`、`tauri:build`
 
 ## 环境变量与外部服务
-- `.env:1` 示例（已包含）：
+- `.env:1` 示例：
   - `PORT=9754`（开发端口）
-  - 其他案例变量：`REACT_APP_ganacheAddress`、`REACT_APP_ganacheRpc`、`REACT_APP_BASE_URL`
+  - 已兼容两种风格：
+    - CRA：`REACT_APP_ganacheAddress`、`REACT_APP_ganacheRpc`、`REACT_APP_BASE_URL`
+    - Vite：`VITE_ganacheAddress`、`VITE_ganacheRpc`、`VITE_BASE_URL`
+  - 代码中已提供兼容读取（见 `src/env.js:1`），可逐步迁移为 `VITE_*`。
 - 如使用 Etherscan API（合约验证/查询），请自行配置 API Key（可放入 `.env` 以 `REACT_APP_...` 形式）。
 - 访问主网/测试网请配置可靠的 RPC（Infura/Alchemy/自建节点等）。
 

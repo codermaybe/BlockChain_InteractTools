@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20.18.0
           cache: 'npm'
 
       - name: Setup Rust
@@ -76,4 +76,3 @@ jobs:
           releaseBody: 'Automated release for version __VERSION__.'
           releaseDraft: false
           prerelease: false
-

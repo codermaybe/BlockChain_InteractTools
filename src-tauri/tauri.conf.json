@@ -4,10 +4,10 @@
   "version": "0.2.8",
   "identifier": "com.github.codermaybe",
   "build": {
-    "beforeDevCommand": "npm start",
+    "beforeDevCommand": "npm run dev:vite",
     "devUrl": "http://localhost:9754",
-    "beforeBuildCommand": "npm run build",
-    "frontendDist": "../build"
+    "beforeBuildCommand": "npm run build:vite",
+    "frontendDist": "../dist"
   },
   "app": {
     "withGlobalTauri": true,

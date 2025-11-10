@@ -38,11 +38,14 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
+    "dev:vite": "vite",
+    "build:vite": "vite build",
+    "preview:vite": "vite preview --port 9754",
     "version": "node scripts/sync-version.js && git add src-tauri/tauri.conf.json src-tauri/Cargo.toml",
     "postversion": "git push && git push --tags"
   },
   "engines": {
-    "node": ">=18 <21",
+    "node": ">=20.18",
     "npm": ">=9"
   },
   "eslintConfig": {
@@ -63,7 +66,16 @@
       "last 1 safari version"
     ]
   },
+  "overrides": {
+    "@solana/web3.js": "1.95.4",
+    "@solana/codecs-core": "2.2.0",
+    "@solana/codecs-data-structures": "2.2.0",
+    "@solana/codecs-numbers": "2.2.0",
+    "@solana/codecs-strings": "2.2.0"
+  },
   "devDependencies": {
-    "@tauri-apps/cli": "^2"
+    "@tauri-apps/cli": "^2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.10"
   }
 }

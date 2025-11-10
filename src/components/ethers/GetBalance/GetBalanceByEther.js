@@ -1,10 +1,11 @@
 import { Fragment, useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { Input, Button, message } from "antd";
+import { env } from "../../../env";
 
 function GetBalanceByEther() {
-  const ganacheRpc = process.env.REACT_APP_ganacheRpc;
-  const ganacheAddress = process.env.REACT_APP_ganacheAddress;
+  const ganacheRpc = env("ganacheRpc", "");
+  const ganacheAddress = env("ganacheAddress", "");
   const [UserRpc, setUserRpc] = useState(ganacheRpc);
   const [RpcStatus, setRpcStatus] = useState(false);
   const [WalletAddress, setWalletAddress] = useState(ganacheAddress);

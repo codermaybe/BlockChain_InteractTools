@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20.18.0
           cache: 'npm'
 
       - name: Setup Rust
@@ -59,4 +59,3 @@ jobs:
 
     # If you want a prerelease on every push, replace the two steps above with tauri-action like in release workflow,
     # and set `prerelease: true`, `releaseDraft: false`, and use a tag like `nightly-${{ github.sha }}`.
-
