@@ -96,23 +96,15 @@ export default function EthereumBasicData() {
   const [rpcUrl, setRpcUrl] = useState("");
   const [countdown, setCountdown] = useState(0);
 
-  // 获取网络配置
-  const getNetworkConfig = (url) => {
-    if (url.includes("sepolia")) {
-      return {
-        name: "sepolia",
-        chainId: 11155111,
-      };
-    } else if (url.includes("mainnet")) {
-      return {
-        name: "mainnet",
-        chainId: 1,
-      };
+  // 简单 URL 校验：仅校验格式与协议，EVM 兼容性通过链上接口实测
+  const isValidUrl = (url) => {
+    if (!url) return false;
+    try {
+      const u = new URL(url);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
     }
-    return {
-      name: "ethereum",
-      chainId: 1,
-    };
   };
 
   // 获取链上数据
@@ -201,7 +193,7 @@ export default function EthereumBasicData() {
           key: "10",
           function: "getBlockSize",
           description: "区块大小",
-          value: block.size ? ethers.formatUnits(block.size, "bytes") : "0",
+          value: block.size ? block.size.toString() : "0",
           unit: "字节",
         },
         {
@@ -266,41 +258,17 @@ export default function EthereumBasicData() {
     setCountdown(value || 0);
   };
 
-  // 验证RPC URL
-  const validateRpcUrl = (url) => {
-    if (!url) return false;
-    // 检查是否是有效的URL
-    try {
-      new URL(url);
-    } catch {
-      return false;
-    }
-    // 检查是否是允许的域名
-    const allowedDomains = [
-      "eth.public-rpc.com",
-      "rpc.ankr.com",
-      "cloudflare-eth.com",
-      "ethereum.publicnode.com",
-      "alchemy.com",
-      "infura.io",
-      "sepolia.infura.io",
-      "eth-sepolia.g.alchemy.com",
-    ];
-    const urlObj = new URL(url);
-    return allowedDomains.some((domain) => urlObj.hostname.includes(domain));
-  };
-
   // 处理RPC URL变更
   const handleRpcUrlChange = (value) => {
-    if (value && !validateRpcUrl(value)) {
-      message.error("仅支持以太坊主网和测试网的RPC节点");
+    if (value && !isValidUrl(value)) {
+      message.error("RPC URL 格式不正确（需 http/https）");
       return;
     }
 
     // 清除provider
     setProvider(null);
     // 清除数据值，保留描述和单位
-    setData(data.map((item) => ({ ...item, value: "-" })));
+    setData((prev) => prev.map((item) => ({ ...item, value: "-" })));
     // 清除定时器
     setSelectedInterval(null);
     setCountdown(0);
@@ -313,13 +281,24 @@ export default function EthereumBasicData() {
     const initProvider = async () => {
       try {
         if (!rpcUrl) return;
-        const networkConfig = getNetworkConfig(rpcUrl);
-        const provider = new ethers.JsonRpcProvider(rpcUrl, networkConfig);
-        // 测试连接
-        await provider.getBlockNumber();
-        setProvider(provider);
+        const p = new ethers.JsonRpcProvider(rpcUrl);
+        // 探测是否为 EVM 兼容：eth_chainId
+        const chainIdHex = await p.send("eth_chainId", []);
+        const chainId = parseInt(chainIdHex, 16);
+        if (!Number.isFinite(chainId)) {
+          throw new Error("RPC 非 EVM 兼容（无法获取 chainId）");
+        }
+        // 进一步验证：获取最新区块号
+        await p.getBlockNumber();
+        setProvider(p);
+        message.success(`已连接 EVM RPC，chainId=${chainId}`);
       } catch (error) {
-        message.error("初始化provider失败: " + error.message);
+        message.error(
+          "初始化 provider 失败：" +
+            (error && error.message
+              ? error.message
+              : "该 RPC 非 EVM 兼容或不可用")
+        );
       }
     };
     if (rpcUrl) {
@@ -333,7 +312,7 @@ export default function EthereumBasicData() {
         <span style={{ marginRight: 8 }}>RPC节点：</span>
         <Input
           style={{ width: 500 }}
-          placeholder="输入以太坊主网或测试网RPC节点URL"
+          placeholder="输入 EVM 兼容链 RPC URL（如以太坊/BSC/Polygon 等）"
           value={rpcUrl}
           onChange={(e) => handleRpcUrlChange(e.target.value)}
         />
