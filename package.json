@@ -1,6 +1,6 @@
 {
   "name": "Blockchain_Interact_App",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
