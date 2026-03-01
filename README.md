@@ -1,6 +1,6 @@
 # BlockChain_InteractTools
 
-面向以太坊等链的交互工具（React + JS + Ethers + solc-js），已整合 Tauri v2，可直接开发与打包桌面应用。
+面向以太坊等链的交互工具（React + JS + Ethers），已整合 Tauri v2，可直接开发与打包桌面应用。
 
 **当前状态**
 - 仅保留主分支 `main`，历史快照以 tag 方式保留：`pre-merge-master`、`pre-merge-tauri-version`、发布点 `v0.2.7`。
@@ -13,10 +13,11 @@
   - 参考：`src/components/ethers/wallet_upgrate_functions/`
 - 余额/代币：ETH 余额、ERC20/721/1155 查询、通用合约交互
   - 参考：`src/components/ethers/GetBalance/`, `src/components/ethers/GetTokenBalance/`
-- 合约部署与验证：本地编译部署，Etherscan 验证
-  - 参考：`src/components/ethers/DeployAndVerify/`
-- Solana：余额查询（基础）
-  - 参考：提交记录“完成 solana 余额查询部分”
+- 批量任务工作台：批量钱包生成、批量余额查询、批量转账、多链 Gas 面板
+  - 参考：`src/components/batch/`, `src/container/BatchContain/`
+- 全局配置与日志：跨页面复用链/RPC/API Key，统一查看任务执行日志
+  - 参考：`src/state/`, `src/components/shared/GlobalSettingsDrawer.jsx`, `src/components/shared/TaskLogDrawer.jsx`
+- Solana：工具区规划中（逐步补齐基础查询与批量交互）
 
 **目录结构（节选）**
 - `src-tauri/`：Tauri 配置与 Rust 端
@@ -81,7 +82,7 @@
     - CRA：`REACT_APP_ganacheAddress`、`REACT_APP_ganacheRpc`、`REACT_APP_BASE_URL`
     - Vite：`VITE_ganacheAddress`、`VITE_ganacheRpc`、`VITE_BASE_URL`
   - 代码中已提供兼容读取（见 `src/env.js:1`），可逐步迁移为 `VITE_*`。
-- 如使用 Etherscan API（合约验证/查询），请自行配置 API Key（可放入 `.env` 以 `REACT_APP_...` 形式）。
+- 如使用 Etherscan API（查询），请自行配置 API Key（可放入 `.env` 以 `REACT_APP_...` 形式）。
 - 访问主网/测试网请配置可靠的 RPC（Infura/Alchemy/自建节点等）。
 
 ## 注意事项与排错
@@ -95,4 +96,4 @@
 
 ---
 
-欢迎提交问题与建议，后续会继续补充功能与文档（尤其是合约验证流程、事件监听与交易历史的使用说明）。
+欢迎提交问题与建议，后续会继续补充功能与文档（尤其是批量任务、事件监听与交易历史的使用说明）。

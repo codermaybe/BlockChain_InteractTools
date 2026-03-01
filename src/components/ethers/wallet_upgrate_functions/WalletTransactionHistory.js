@@ -1,494 +1,361 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  Input,
-  Table,
-  Spin,
-  message,
-  Typography,
-  Select,
-  Space,
-  Radio,
   Alert,
   Card,
+  Input,
+  Radio,
+  Select,
+  Space,
+  Spin,
+  Table,
+  Typography,
+  message,
 } from "antd";
-import axios from "axios";
 import { ethers } from "ethers";
+import { useAppSettings } from "../../../state/AppSettingsContext";
+import { useTaskLog } from "../../../state/TaskLogContext";
 
 const { Title } = Typography;
-const { Option } = Select;
+
+const NETWORK_OPTIONS = {
+  mainnet: {
+    name: "Ethereum Mainnet",
+    api: "api.etherscan.io",
+    explorer: "https://etherscan.io/tx/",
+    chainKey: "eth-mainnet",
+    chainId: 1,
+  },
+  sepolia: {
+    name: "Sepolia Testnet",
+    api: "api-sepolia.etherscan.io",
+    explorer: "https://sepolia.etherscan.io/tx/",
+    chainKey: "eth-sepolia",
+    chainId: 11155111,
+  },
+  goerli: {
+    name: "Goerli Testnet",
+    api: "api-goerli.etherscan.io",
+    explorer: "https://goerli.etherscan.io/tx/",
+    chainKey: "eth-goerli",
+    chainId: 5,
+  },
+  local: {
+    name: "Local Hardhat",
+    explorer: null,
+    chainKey: "",
+    chainId: 31337,
+  },
+};
+
+const LIMIT_OPTIONS = {
+  all: { name: "全部", value: Infinity },
+  ten: { name: "最近十条", value: 10 },
+  selfdefine: { name: "自定义", value: "custom" },
+};
+
+function formatDate(timestamp) {
+  try {
+    const sec = parseInt(timestamp, 10);
+    if (!Number.isFinite(sec) || sec <= 0) return "未知";
+    const date = new Date(sec * 1000);
+    if (Number.isNaN(date.getTime())) return "未知";
+    return date.toLocaleString();
+  } catch {
+    return "未知";
+  }
+}
+
+function mapPreferredChainToNetwork(chainKey) {
+  if (chainKey === "eth-mainnet") return "mainnet";
+  if (chainKey === "eth-sepolia") return "sepolia";
+  if (chainKey === "eth-goerli") return "goerli";
+  return "mainnet";
+}
 
 export default function WalletTransactionHistory() {
+  const settings = useAppSettings();
+  const { addLog } = useTaskLog();
+  const defaultNetwork = mapPreferredChainToNetwork(settings.preferredChainKey);
   const [address, setAddress] = useState("");
-  const [network, setNetwork] = useState("mainnet");
+  const [network, setNetwork] = useState(defaultNetwork);
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [rpcUrl, setRpcUrl] = useState("");
+  const [rpcUrl, setRpcUrl] = useState(
+    settings.getResolvedRpc(settings.preferredChainKey)
+  );
   const [transactionLimit, setTransactionLimit] = useState("ten");
   const [customLimit, setCustomLimit] = useState("");
   const [dataSource, setDataSource] = useState("etherscan");
 
-  const networkOptions = {
-    mainnet: {
-      name: "Ethereum Mainnet",
-      api: "api.etherscan.io",
-      explorer: "https://etherscan.io/tx/",
-      rpc: "https://eth-mainnet.g.alchemy.com/v2/YOUR_ALCHEMY_KEY",
-      chainId: 1,
-      currency: "ETH",
-      decimals: 18,
-    },
-    sepolia: {
-      name: "Sepolia Testnet",
-      api: "api-sepolia.etherscan.io",
-      explorer: "https://sepolia.etherscan.io/tx/",
-      rpc: "https://eth-sepolia.g.alchemy.com/v2/YOUR_ALCHEMY_KEY",
-      chainId: 11155111,
-      currency: "ETH",
-      decimals: 18,
-    },
-    goerli: {
-      name: "Goerli Testnet",
-      api: "api-goerli.etherscan.io",
-      explorer: "https://goerli.etherscan.io/tx/",
-      rpc: "https://eth-goerli.g.alchemy.com/v2/YOUR_ALCHEMY_KEY",
-      chainId: 5,
-      currency: "ETH",
-      decimals: 18,
-    },
-    local: {
-      name: "Local Hardhat",
-      rpc: "http://127.0.0.1:8545",
-      explorer: null,
-      chainId: 31337,
-      currency: "ETH",
-      decimals: 18,
-    },
-  };
-
-  const transactionNumbers = {
-    all: { name: "全部", value: Infinity },
-    ten: { name: "最近十条", value: 10 },
-    selfdefine: { name: "自定义", value: "custom" },
-  };
-
-  // 格式化时间函数
-  const formatDate = (timestamp) => {
-    try {
-      const timestampSec = parseInt(timestamp);
-      if (isNaN(timestampSec) || timestampSec <= 0) {
-        return "未知";
-      }
-      // 检查时间戳是否在合理范围内
-      const now = Math.floor(Date.now() / 1000);
-      if (timestampSec > now + 86400) {
-        // 未来24小时
-        return "未知";
-      }
-      const date = new Date(timestampSec * 1000);
-      if (isNaN(date.getTime())) {
-        return "未知";
-      }
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const seconds = String(date.getSeconds()).padStart(2, "0");
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    } catch {
-      return "未知";
-    }
-  };
-
-  // 验证网络配置
-  const validateNetwork = async (provider, network) => {
-    try {
-      const networkInfo = await provider.getNetwork();
-      return networkInfo.chainId === networkOptions[network].chainId;
-    } catch (error) {
-      return false;
-    }
-  };
-
-  const columns = [
-    {
-      title: "交易哈希",
-      dataIndex: "hash",
-      key: "hash",
-      render: (text) =>
-        dataSource === "etherscan" && networkOptions[network].explorer ? (
-          <a
-            href={`${networkOptions[network].explorer}${text}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {`${text.slice(0, 6)}...${text.slice(-6)}`}
-          </a>
-        ) : (
-          `${text.slice(0, 6)}...${text.slice(-6)}`
-        ),
-    },
-    {
-      title: "时间",
-      dataIndex: "timestamp",
-      key: "timestamp",
-      render: (text) => text || "未知",
-    },
-    {
-      title: "发送者",
-      dataIndex: "from",
-      key: "from",
-      render: (text) => `${text.slice(0, 6)}...${text.slice(-6)}`,
-    },
-    {
-      title: "接收者",
-      dataIndex: "to",
-      key: "to",
-      render: (text) =>
-        text ? `${text.slice(0, 6)}...${text.slice(-6)}` : "创建合约",
-    },
-    {
-      title: "金额 (ETH)",
-      dataIndex: "value",
-      key: "value",
-      render: (text) => ethers.formatEther(text || "0"),
-    },
-    {
-      title: "Gas 费用 (ETH)",
-      dataIndex: "gasUsed",
-      key: "gasUsed",
-      render: (text, record) => {
-        if (dataSource === "etherscan" && record.gasUsed && record.gasPrice) {
-          try {
-            const gasUsed = BigInt(record.gasUsed);
-            const gasPrice = BigInt(record.gasPrice);
-            return ethers.formatEther(gasUsed * gasPrice);
-          } catch {
-            return "计算失败";
-          }
-        }
-        return "未知";
+  const columns = useMemo(
+    () => [
+      {
+        title: "交易哈希",
+        dataIndex: "hash",
+        key: "hash",
+        render: (text) =>
+          dataSource === "etherscan" && NETWORK_OPTIONS[network].explorer ? (
+            <a
+              href={`${NETWORK_OPTIONS[network].explorer}${text}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {`${text.slice(0, 6)}...${text.slice(-6)}`}
+            </a>
+          ) : (
+            `${text.slice(0, 6)}...${text.slice(-6)}`
+          ),
       },
-    },
-  ];
+      {
+        title: "时间",
+        dataIndex: "timestamp",
+        key: "timestamp",
+      },
+      {
+        title: "发送者",
+        dataIndex: "from",
+        key: "from",
+        render: (text) => `${text.slice(0, 6)}...${text.slice(-6)}`,
+      },
+      {
+        title: "接收者",
+        dataIndex: "to",
+        key: "to",
+        render: (text) =>
+          text ? `${text.slice(0, 6)}...${text.slice(-6)}` : "创建合约",
+      },
+      {
+        title: "金额 (ETH)",
+        dataIndex: "value",
+        key: "value",
+        render: (text) => ethers.formatEther(text || "0"),
+      },
+    ],
+    [dataSource, network]
+  );
 
-  const fetchTransactionsByEtherscan = async () => {
+  const resolveLimit = () => {
+    const customLimitValue = parseInt(customLimit, 10);
+    if (transactionLimit === "ten") return 10;
+    if (transactionLimit === "selfdefine") return customLimitValue;
+    return 500;
+  };
+
+  const validateInputs = () => {
     if (!ethers.isAddress(address)) {
       message.error("请输入有效的以太坊地址");
-      return;
-    }
-    if (!apiKey) {
-      message.error("请输入有效的 Etherscan API Key");
-      return;
-    }
-    const customLimitValue = parseInt(customLimit);
-    if (
-      transactionLimit === "selfdefine" &&
-      (!customLimitValue || customLimitValue <= 0)
-    ) {
-      message.error("请输入有效的自定义条目数量（正整数）");
-      return;
+      return false;
     }
 
-    setIsLoading(true);
-    const apiDomain = networkOptions[network].api;
-    const pageSize =
-      transactionLimit === "selfdefine" ? customLimitValue : 1000;
-    const url = `https://${apiDomain}/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=${pageSize}&sort=desc&apikey=${apiKey}`;
-
-    try {
-      const response = await axios.get(url);
-      if (response.data.status === "1") {
-        if (response.data.result.length === 0) {
-          message.warning("未找到交易记录，请确认地址和网络是否正确");
-          setTransactions([]);
-          return;
-        }
-        const allTransactions = response.data.result;
-        const limitedTransactions = allTransactions.map((tx) => ({
-          ...tx,
-          timestamp: formatDate(tx.timeStamp),
-        }));
-        if (transactionLimit === "ten") {
-          setTransactions(limitedTransactions.slice(0, 10));
-        } else if (transactionLimit === "selfdefine") {
-          setTransactions(limitedTransactions.slice(0, customLimitValue));
-        } else {
-          setTransactions(limitedTransactions);
-        }
-        message.success(
-          `查询 ${networkOptions[network].name} 交易成功，显示 ${limitedTransactions.length} 条记录`
-        );
-      } else {
-        let errorMessage = "Etherscan 查询失败";
-        switch (response.data.message) {
-          case "No transactions found":
-            errorMessage = "未找到交易记录";
-            break;
-          case "Invalid API Key":
-            errorMessage = "API Key 无效";
-            break;
-          case "Rate limit exceeded":
-            errorMessage = "API 调用次数超限";
-            break;
-          default:
-            errorMessage = response.data.message;
-        }
-        message.warning(errorMessage);
-        setTransactions([]);
-      }
-    } catch (error) {
-      if (error.response) {
-        switch (error.response.status) {
-          case 429:
-            message.error("API 调用频率超限，请稍后再试");
-            break;
-          case 403:
-            message.error("API Key 无效或已过期");
-            break;
-          case 404:
-            message.error("API 端点不存在");
-            break;
-          default:
-            message.error(
-              `查询失败: ${error.response.data.message || error.message}`
-            );
-        }
-      } else if (error.request) {
-        message.error("网络请求失败，请检查网络连接");
-      } else {
-        message.error(`查询失败: ${error.message}`);
-      }
-      setTransactions([]);
-    } finally {
-      setIsLoading(false);
+    if (dataSource === "etherscan" && !settings.etherscanApiKey) {
+      message.error("请先填写全局 Etherscan API Key");
+      return false;
     }
+
+    if (dataSource === "rpc" && !rpcUrl) {
+      message.error("请输入有效的 RPC URL");
+      return false;
+    }
+
+    if (transactionLimit === "selfdefine" && (!resolveLimit() || resolveLimit() <= 0)) {
+      message.error("请输入有效的自定义条目数量");
+      return false;
+    }
+    return true;
+  };
+
+  const fetchTransactionsByEtherscan = async () => {
+    const pageSize = transactionLimit === "selfdefine" ? resolveLimit() : 1000;
+    const apiDomain = NETWORK_OPTIONS[network].api;
+    const url = `https://${apiDomain}/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=${pageSize}&sort=desc&apikey=${settings.etherscanApiKey}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`请求失败: ${response.status}`);
+    }
+    const data = await response.json();
+    if (data.status !== "1") throw new Error(data.message || "Etherscan 查询失败");
+
+    const list = data.result.map((tx) => ({
+      ...tx,
+      timestamp: formatDate(tx.timeStamp),
+    }));
+    if (transactionLimit === "ten") return list.slice(0, 10);
+    if (transactionLimit === "selfdefine") return list.slice(0, resolveLimit());
+    return list;
   };
 
   const fetchTransactionsByRpc = async () => {
-    if (!ethers.isAddress(address)) {
-      message.error("请输入有效的以太坊地址");
-      return;
-    }
-    if (!rpcUrl) {
-      message.error("请输入有效的 RPC URL");
-      return;
-    }
-    const customLimitValue = parseInt(customLimit);
-    if (
-      transactionLimit === "selfdefine" &&
-      (!customLimitValue || customLimitValue <= 0)
-    ) {
-      message.error("请输入有效的自定义条目数量（正整数）");
-      return;
-    }
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const latestBlock = await provider.getBlockNumber();
+    const limit = resolveLimit();
+    const startBlock = Math.max(0, latestBlock - limit);
+    const blocks = await Promise.all(
+      Array.from({ length: latestBlock - startBlock + 1 }).map((_, i) =>
+        provider.getBlock(startBlock + i, true)
+      )
+    );
 
-    setIsLoading(true);
-    try {
-      const provider = new ethers.JsonRpcProvider(rpcUrl);
-      await provider.getBlockNumber();
-
-      // 只在 Etherscan 模式下验证网络
-      if (dataSource === "etherscan") {
-        const isValidNetwork = await validateNetwork(provider, network);
-        if (!isValidNetwork) {
-          message.error("RPC 节点与选择的网络不匹配");
-          return;
-        }
-      }
-
-      const latestBlock = await provider.getBlockNumber();
-      const limit =
-        transactionLimit === "ten"
-          ? 10
-          : transactionLimit === "selfdefine"
-          ? customLimitValue
-          : 500;
-      const startBlock = Math.max(0, latestBlock - limit);
-
-      // 使用 Promise.all 并行获取区块
-      const blockPromises = [];
-      for (let i = startBlock; i <= latestBlock; i++) {
-        blockPromises.push(provider.getBlock(i, true));
-      }
-
-      const blocks = await Promise.all(blockPromises);
-      const addressLower = address.toLowerCase();
-
-      let allTransactions = [];
-      blocks.forEach((block) => {
-        if (block && block.transactions && block.transactions.length > 0) {
-          const txs = block.transactions
-            .filter((tx) => {
-              const from = tx.from ? tx.from.toLowerCase() : "";
-              const to = tx.to ? tx.to.toLowerCase() : "";
-              return from === addressLower || to === addressLower;
-            })
-            .map((tx) => ({
-              hash: tx.hash,
-              timestamp: formatDate(block.timestamp),
-              from: tx.from || "未知",
-              to: tx.to || null,
-              value: tx.value.toString(),
-              gasUsed: tx.gasUsed?.toString(),
-              gasPrice: tx.gasPrice?.toString(),
-            }));
-          allTransactions = allTransactions.concat(txs);
-        }
+    const addressLower = address.toLowerCase();
+    const all = [];
+    blocks.forEach((block) => {
+      if (!block || !block.transactions) return;
+      block.transactions.forEach((tx) => {
+        const from = tx.from ? tx.from.toLowerCase() : "";
+        const to = tx.to ? tx.to.toLowerCase() : "";
+        if (from !== addressLower && to !== addressLower) return;
+        all.push({
+          hash: tx.hash,
+          timestamp: formatDate(block.timestamp),
+          from: tx.from || "未知",
+          to: tx.to || null,
+          value: tx.value?.toString() || "0",
+        });
       });
-
-      // 按时间戳排序
-      allTransactions.sort((a, b) => {
-        const timeA = new Date(a.timestamp).getTime();
-        const timeB = new Date(b.timestamp).getTime();
-        return timeB - timeA;
-      });
-
-      // 限制返回数量
-      if (transactionLimit !== "all") {
-        allTransactions = allTransactions.slice(0, limit);
-      }
-
-      if (allTransactions.length === 0) {
-        message.warning(
-          "未在最近区块中找到相关交易，建议使用 Etherscan 查询完整历史"
-        );
-      } else {
-        message.success(`RPC 查询成功，显示 ${allTransactions.length} 条记录`);
-      }
-      setTransactions(allTransactions);
-    } catch (error) {
-      if (error.code === "NETWORK_ERROR") {
-        message.error("无法连接到 RPC 服务器，请检查网络或 RPC URL");
-      } else if (error.code === "TIMEOUT") {
-        message.error("RPC 查询超时，请减少查询范围或稍后重试");
-      } else {
-        message.error(`RPC 查询失败: ${error.message}`);
-      }
-      setTransactions([]);
-    } finally {
-      setIsLoading(false);
-    }
+    });
+    return all.slice(0, limit);
   };
 
-  const fetchTransactions = () => {
-    if (dataSource === "etherscan") {
-      fetchTransactionsByEtherscan();
-    } else {
-      fetchTransactionsByRpc();
+  const fetchTransactions = async () => {
+    if (!validateInputs()) return;
+    setIsLoading(true);
+    addLog({
+      level: "info",
+      category: "wallet-history",
+      message: "开始查询交易记录",
+      meta: { dataSource, network, address },
+    });
+
+    try {
+      const records =
+        dataSource === "etherscan"
+          ? await fetchTransactionsByEtherscan()
+          : await fetchTransactionsByRpc();
+
+      setTransactions(records);
+      addLog({
+        level: "success",
+        category: "wallet-history",
+        message: "交易记录查询完成",
+        meta: { dataSource, network, address, count: records.length },
+      });
+      message.success(`查询成功，共 ${records.length} 条`);
+    } catch (error) {
+      setTransactions([]);
+      addLog({
+        level: "error",
+        category: "wallet-history",
+        message: "交易记录查询失败",
+        meta: { dataSource, network, address, error: error?.message || "unknown" },
+      });
+      message.error(error?.message || "查询失败");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div style={{ margin: "20px", marginLeft: "0", marginRight: "auto" }}>
-      <Title level={3}>钱包交易记录查询</Title>
-      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        <Alert
-          message="提示"
-          description="RPC 查询仅扫描最近区块，可能会错过历史交易且速度较慢，建议优先使用 Etherscan API 获取完整记录。"
-          type="info"
-          showIcon
-          closable
-        />
-        <Card style={{ border: "1px solid #e8e8e8" }}>
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <Radio.Group
-              value={dataSource}
-              onChange={(e) => setDataSource(e.target.value)}
-            >
-              <Radio value="etherscan">Etherscan API</Radio>
-              <Radio value="rpc">RPC + Ethers.js</Radio>
-            </Radio.Group>
+    <div className="mx-auto w-full space-y-4">
+      <Title level={4} style={{ marginBottom: 0 }}>
+        钱包交易记录查询
+      </Title>
+      <Alert
+        message="提示"
+        description="API Key 与默认 RPC 已接入全局配置，页面切换后可复用。"
+        type="info"
+        showIcon
+      />
+
+      <Card style={{ border: "1px solid #e8e8e8" }}>
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <Radio.Group value={dataSource} onChange={(e) => setDataSource(e.target.value)}>
+            <Radio value="etherscan">Etherscan API</Radio>
+            <Radio value="rpc">RPC + Ethers.js</Radio>
+          </Radio.Group>
+
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
+            <Select
+              value={network}
+              onChange={(value) => {
+                setNetwork(value);
+                const chainKey = NETWORK_OPTIONS[value]?.chainKey;
+                if (chainKey) {
+                  settings.setPreferredChainKey(chainKey);
+                  setRpcUrl(settings.getResolvedRpc(chainKey));
+                }
+              }}
+              options={Object.entries(NETWORK_OPTIONS).map(([key, config]) => ({
+                value: key,
+                label: config.name,
+              }))}
+              disabled={isLoading}
+            />
+
+            <Select
+              value={transactionLimit}
+              onChange={(value) => setTransactionLimit(value)}
+              options={Object.entries(LIMIT_OPTIONS).map(([key, item]) => ({
+                value: key,
+                label: item.name,
+              }))}
+              disabled={isLoading}
+            />
+
+            {transactionLimit === "selfdefine" && (
+              <Input
+                placeholder="条目数量"
+                value={customLimit}
+                onChange={(e) => setCustomLimit(e.target.value)}
+                type="number"
+                min={1}
+                disabled={isLoading}
+              />
+            )}
 
             {dataSource === "etherscan" ? (
-              <Input
-                placeholder="请输入 Etherscan API Key"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+              <Input.Password
+                placeholder="全局 Etherscan API Key"
+                value={settings.etherscanApiKey}
+                onChange={(e) => settings.setEtherscanApiKey(e.target.value)}
                 disabled={isLoading}
-                style={{ width: 400 }}
               />
             ) : (
               <Input
-                placeholder="请输入 RPC URL (如 http://127.0.0.1:8545)"
+                placeholder="RPC URL"
                 value={rpcUrl}
-                onChange={(e) => setRpcUrl(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setRpcUrl(value);
+                  const chainKey = NETWORK_OPTIONS[network]?.chainKey;
+                  if (chainKey) settings.setRpcOverride(chainKey, value);
+                }}
                 disabled={isLoading}
-                style={{ width: 400 }}
               />
             )}
+          </div>
 
-            <Space
-              size="middle"
-              style={{ width: "100%", display: "flex", alignItems: "center" }}
-            >
-              {dataSource === "etherscan" && (
-                <Select
-                  value={network}
-                  onChange={(value) => setNetwork(value)}
-                  style={{ width: 200 }}
-                  disabled={isLoading}
-                >
-                  {Object.entries(networkOptions).map(([key, { name }]) => (
-                    <Option key={key} value={key}>
-                      {name}
-                    </Option>
-                  ))}
-                </Select>
-              )}
-              <Select
-                value={transactionLimit}
-                onChange={(value) => setTransactionLimit(value)}
-                style={{ width: 150 }}
-                disabled={isLoading}
-              >
-                {Object.entries(transactionNumbers).map(([key, { name }]) => (
-                  <Option key={key} value={key}>
-                    {name}
-                  </Option>
-                ))}
-              </Select>
-              {transactionLimit === "selfdefine" && (
-                <Input
-                  placeholder="请输入条目数量"
-                  value={customLimit}
-                  onChange={(e) => setCustomLimit(e.target.value)}
-                  type="number"
-                  min={1}
-                  style={{ width: 150 }}
-                  disabled={isLoading}
-                />
-              )}
-              <Input.Search
-                placeholder="请输入以太坊地址 (0x...)"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                enterButton="查询"
-                onSearch={fetchTransactions}
-                style={{ width: "100%", minWidth: 300 }}
-                disabled={isLoading}
-              />
-            </Space>
+          <Input.Search
+            placeholder="请输入以太坊地址 (0x...)"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            enterButton="查询"
+            onSearch={fetchTransactions}
+            disabled={isLoading}
+          />
 
-            {isLoading ? (
-              <Spin
-                tip="查询中..."
-                style={{ display: "block", textAlign: "center" }}
-              />
-            ) : (
-              <Table
-                columns={columns}
-                dataSource={transactions}
-                rowKey="hash"
-                pagination={{ pageSize: 5 }}
-                locale={{ emptyText: "暂无交易记录" }}
-                scroll={{ x: "max-content" }}
-              />
-            )}
-          </Space>
-        </Card>
-      </Space>
+          {isLoading ? (
+            <Spin tip="查询中..." style={{ display: "block", textAlign: "center" }} />
+          ) : (
+            <Table
+              columns={columns}
+              dataSource={transactions}
+              rowKey="hash"
+              pagination={{ pageSize: 6 }}
+              locale={{ emptyText: "暂无交易记录" }}
+              scroll={{ x: "max-content" }}
+            />
+          )}
+        </Space>
+      </Card>
     </div>
   );
 }

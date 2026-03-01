@@ -1,13 +1,62 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family:
+      "PingFang SC",
+      "Microsoft YaHei",
+      "Noto Sans SC",
+      "Segoe UI",
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-slate-100 text-slate-900;
+  }
+
+  /* 隐藏滚动条但保留滚动能力 */
+  * {
+    scrollbar-width: none;          /* Firefox */
+  }
+  *::-webkit-scrollbar {
+    display: none;                  /* Chrome / Edge / Safari */
+  }
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+@layer components {
+  .workbench-surface {
+    @apply rounded-2xl border border-slate-200 bg-white/90 shadow-soft backdrop-blur-sm;
+  }
+
+  .tool-tabs-shell.ant-tabs .ant-tabs-nav {
+    margin-bottom: 8px;
+  }
+
+  .tool-tabs-shell.ant-tabs .ant-tabs-content-holder {
+    overflow: visible;
+  }
+}
+
+/* Sidebar active item highlight */
+.ant-menu-inline .ant-menu-item-selected {
+  font-weight: 600;
+}
+
+/* Header action buttons - ghost style on desktop */
+@media (min-width: 768px) {
+  .ant-layout-header .ant-btn-default {
+    border-color: transparent;
+    background: transparent;
+  }
+  .ant-layout-header .ant-btn-default:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
 }

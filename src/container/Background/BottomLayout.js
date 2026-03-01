@@ -1,21 +1,29 @@
 import React, { useState } from "react";
-import { Layout, Menu, Result, Button } from "antd";
+import { Badge, Button, Divider, Layout, Menu, Result, Space, Tag, Typography } from "antd";
 import {
   AppstoreOutlined,
+  LinkOutlined,
   MailOutlined,
-  LogoutOutlined,
+  ThunderboltOutlined,
+  SettingOutlined,
+  UnorderedListOutlined,
 } from "@ant-design/icons";
 
 // 引入功能组件
 import EthersTab from "../EtherContain/EthersTab";
 import EtherTokenTab from "../EtherContain/EtherTokenTab";
-import DeployContract from "../../components/ethers/DeployAndVerify/DeployContract";
 import WalletBasicTab from "../EtherContain/WalletBasicTab";
 import WalletUpgrateTab from "../EtherContain/WalletUpgrateTab";
-import VerifyContract from "../../components/ethers/DeployAndVerify/VerifyContract";
 import SolanaTab from "../SolanaContain/SolanaTab";
+import BatchToolTab from "../BatchContain/BatchToolTab";
+import GlobalSettingsDrawer from "../../components/shared/GlobalSettingsDrawer";
+import TaskLogDrawer from "../../components/shared/TaskLogDrawer";
+import { useAppSettings } from "../../state/AppSettingsContext";
+import { useTaskLog } from "../../state/TaskLogContext";
+import { getEvmChainByKey } from "../../config/chainRegistry";
 
-const { Sider, Content } = Layout;
+const { Title, Paragraph } = Typography;
+const { Sider, Content, Header } = Layout;
 
 // 菜单配置
 const MENU_ITEMS = [
@@ -31,15 +39,6 @@ const MENU_ITEMS = [
         children: [
           { key: "eth-balance", label: "ETH查询余额" },
           { key: "token-interaction", label: "代币函数调用" },
-        ],
-      },
-      {
-        key: "group2",
-        type: "group",
-        label: "快速部署",
-        children: [
-          { key: "deploy-contract", label: "部署合约" },
-          { key: "verify-contract", label: "验证合约" },
         ],
       },
       {
@@ -59,23 +58,44 @@ const MENU_ITEMS = [
     icon: <AppstoreOutlined />,
     children: [{ key: "sol-balance", label: "余额查询" }],
   },
+  {
+    key: "efficiency",
+    label: "效率工具",
+    icon: <ThunderboltOutlined />,
+    children: [{ key: "batch-suite", label: "批量任务工作台" }],
+  },
 ];
 
 // 内容映射配置
 const CONTENT_COMPONENTS = {
   "eth-balance": <EthersTab />,
   "token-interaction": <EtherTokenTab />,
-  "deploy-contract": <DeployContract />,
-  "verify-contract": <VerifyContract />,
   "wallet-basicfunction": <WalletBasicTab />,
   "wallet-upgratefunction": <WalletUpgrateTab />,
   "sol-balance": <SolanaTab />,
+  "batch-suite": <BatchToolTab />,
 };
 
-const BottomLayout = ({ wallet, onLogout }) => {
+function findLabelByKey(items, targetKey) {
+  for (const item of items) {
+    if (item.key === targetKey) return item.label;
+    if (item.children) {
+      const found = findLabelByKey(item.children, targetKey);
+      if (found) return found;
+    }
+  }
+  return "";
+}
+
+const BottomLayout = () => {
+  const settings = useAppSettings();
+  const { errorCount } = useTaskLog();
+
   // 状态管理
   const [activeKey, setActiveKey] = useState("eth-balance");
-  const [openKeys, setOpenKeys] = useState(["ethereum"]);
+  const [openKeys, setOpenKeys] = useState(["ethereum", "efficiency"]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [logsOpen, setLogsOpen] = useState(false);
 
   // 菜单点击处理
   const handleMenuClick = ({ key }) => {
@@ -96,22 +116,75 @@ const BottomLayout = ({ wallet, onLogout }) => {
     );
   };
 
+  const activeLabel = findLabelByKey(MENU_ITEMS, activeKey) || "功能开发中";
+  const defaultChainName = getEvmChainByKey(
+    settings.preferredEvmChainKey || settings.preferredChainKey
+  ).name;
+
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sider width={256} theme="light">
-        <Menu
-          mode="inline"
-          selectedKeys={[activeKey]}
-          openKeys={openKeys}
-          onOpenChange={handleOpenChange}
-          onClick={handleMenuClick}
-          items={MENU_ITEMS}
-        />
+    <Layout className="h-screen overflow-hidden bg-gradient-to-br from-brand-50 via-slate-50 to-cyan-50">
+      <Sider
+        width={272}
+        breakpoint="lg"
+        collapsedWidth="0"
+        theme="light"
+        className="!sticky !top-0 !h-screen border-r border-slate-200/70 !bg-white/95"
+      >
+        <div className="flex h-full flex-col">
+          <div className="shrink-0 border-b border-slate-100 px-4 py-3">
+            <Title level={5} style={{ margin: 0, lineHeight: 1.3 }}>
+              BlockChain Interact Tools
+            </Title>
+            <Paragraph style={{ margin: "4px 0 0", color: "#94a3b8", fontSize: 12 }}>
+              多链交互与批量任务工具台
+            </Paragraph>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <Menu
+              mode="inline"
+              selectedKeys={[activeKey]}
+              openKeys={openKeys}
+              onOpenChange={handleOpenChange}
+              onClick={handleMenuClick}
+              items={MENU_ITEMS}
+              className="!border-r-0 !bg-transparent"
+            />
+          </div>
+        </div>
       </Sider>
 
-      <Content style={{ padding: 24, background: "#fff" }}>
-        {renderContent()}
-      </Content>
+      <Layout className="h-screen">
+        <Header className="!h-14 !min-h-0 !shrink-0 flex items-center border-b border-slate-200/70 !bg-white/80 !px-4 backdrop-blur md:!px-6 !leading-[56px]">
+          <div className="flex w-full items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <Title level={4} style={{ margin: 0 }}>
+                {activeLabel}
+              </Title>
+              <Divider type="vertical" className="!mx-0 !h-5 !border-slate-300" />
+              <Tag icon={<LinkOutlined />} color="processing">
+                {defaultChainName}
+              </Tag>
+            </div>
+            <Space wrap>
+              <Badge count={errorCount} size="small">
+                <Button icon={<UnorderedListOutlined />} onClick={() => setLogsOpen(true)}>
+                  任务日志
+                </Button>
+              </Badge>
+              <Button icon={<SettingOutlined />} type="primary" onClick={() => setSettingsOpen(true)}>
+                全局配置
+              </Button>
+            </Space>
+          </div>
+        </Header>
+        <Content className="min-h-0 flex-1 overflow-y-auto p-2 md:p-3">
+          <div className="workbench-surface min-h-full p-3 md:p-4">
+            {renderContent()}
+          </div>
+        </Content>
+      </Layout>
+      <GlobalSettingsDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <TaskLogDrawer open={logsOpen} onClose={() => setLogsOpen(false)} />
     </Layout>
   );
 };

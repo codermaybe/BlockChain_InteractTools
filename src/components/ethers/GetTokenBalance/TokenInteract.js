@@ -1,6 +1,7 @@
 import { Input, Button, Select, Card, Space, message } from "antd";
 import { Fragment, useState, useEffect } from "react";
 import { ethers } from "ethers";
+import { useAppSettings } from "../../../state/AppSettingsContext";
 
 // 代币标准配置
 const TOKEN_STANDARDS = {
@@ -34,9 +35,10 @@ const TOKEN_STANDARDS = {
 };
 
 export default function TokenInteract() {
+  const settings = useAppSettings();
   // 统一状态管理
   const [formData, setFormData] = useState({
-    rpcUrl: "https://eth-sepolia.g.alchemy.com/v2/demo",
+    rpcUrl: settings.getResolvedRpc(settings.preferredChainKey),
     contractAddress: "",
     contractAbi: "",
     privateKey: "",
@@ -101,6 +103,9 @@ export default function TokenInteract() {
 
   // 统一输入处理函数
   const handleInputChange = (field, value) => {
+    if (field === "rpcUrl") {
+      settings.setRpcOverride(settings.preferredChainKey, value);
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
     clearError(field);
   };

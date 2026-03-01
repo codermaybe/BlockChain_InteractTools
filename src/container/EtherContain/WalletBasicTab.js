@@ -1,42 +1,40 @@
-import { useState } from "react";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
+import React from "react";
 import WalletCreate from "../../components/ethers/wallet_basic_functions/WalletCreate";
 import WalletRecover from "../../components/ethers/wallet_basic_functions/WalletRecover";
 import WalletTransfer from "../../components/ethers/wallet_basic_functions/WalletTransfer";
 import EthereumBasicData from "../../components/ethers/wallet_basic_functions/EthereumBasicData";
+import ToolTabs from "../../components/shared/ToolTabs";
 
-const WalletBasicTab = () => {
-  const [index, setIndex] = useState("A");
+const ITEMS = [
+  {
+    key: "wallet-create",
+    label: "生成钱包",
+    children: <WalletCreate />,
+  },
+  {
+    key: "wallet-transfer",
+    label: "转账",
+    children: <WalletTransfer />,
+  },
+  {
+    key: "wallet-recover",
+    label: "恢复钱包",
+    children: <WalletRecover />,
+  },
+  {
+    key: "base-chain-data",
+    label: "基础链数据",
+    children: <EthereumBasicData />,
+  },
+];
 
-  const handleChange = (event, newIndex) => {
-    setIndex(newIndex);
-  };
-
+export default function WalletBasicTab() {
   return (
-    <>
-      <Tabs value={index} onChange={handleChange}>
-        <Tab label="生成钱包" value="A" />
-        <Tab label="转账" value="B" />
-        <Tab label="钱包助记词/私钥恢复" value="C" />
-        <Tab label="基础数据查询" value="D" />
-      </Tabs>
-
-      {/* 根据选中的 tab 显示不同内容 */}
-      {index === "A" && (
-        <div>
-          <WalletCreate />
-        </div>
-      )}
-      {index === "B" && <WalletTransfer />}
-      {index === "C" && (
-        <div>
-          <WalletRecover />
-        </div>
-      )}
-      {index === "D" && <EthereumBasicData />}
-    </>
+    <ToolTabs
+      title="钱包基础功能"
+      description="覆盖创建、恢复与转账操作，并支持链基础数据快速查询。"
+      items={ITEMS}
+      defaultActiveKey="wallet-create"
+    />
   );
-};
-
-export default WalletBasicTab;
+}

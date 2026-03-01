@@ -1,21 +1,21 @@
 import React from "react";
-import { Card, Typography, Result } from "antd";
+import ToolTabs from "../../components/shared/ToolTabs";
+import SolanaBalanceChecker from "../../components/solana/SolanaBalanceChecker";
 
-const { Title, Paragraph } = Typography;
+const TAB_ITEMS = [
+  {
+    key: "sol-balance",
+    label: "余额查询",
+    children: <SolanaBalanceChecker />,
+  },
+];
 
-// 轻量占位组件：用于恢复构建，后续可替换为真实 Solana 查询
-const SolanaTab = () => {
+export default function SolanaTab() {
   return (
-    <Card bordered={false} style={{ width: "100%" }}>
-      <Title level={4}>Solana 工具（占位）</Title>
-      <Paragraph>
-        该模块用于 Solana 相关功能（如余额查询等）。当前为占位组件，
-        主要用于恢复页面结构与导航。后续将补充真实功能。
-      </Paragraph>
-      <Result status="info" title="Solana 功能开发中" />
-    </Card>
+    <ToolTabs
+      description="Solana 工具已切换为可执行模式，当前提供 SOL/SPL 批量余额查询。"
+      defaultActiveKey="sol-balance"
+      items={TAB_ITEMS}
+    />
   );
-};
-
-export default SolanaTab;
-
+}

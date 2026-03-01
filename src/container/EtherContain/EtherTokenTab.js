@@ -1,23 +1,46 @@
-import { useState } from "react";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
+import React from "react";
 import ERC20Balance from "../../components/ethers/GetTokenBalance/ERC20Balance";
 import ERC721Balance from "../../components/ethers/GetTokenBalance/ERC721Balance";
 import ERC1155Balance from "../../components/ethers/GetTokenBalance/ERC1155Balance";
 import GeneralInteract from "../../components/ethers/GetTokenBalance/GeneralInteract";
 import TokenInteract from "../../components/ethers/GetTokenBalance/TokenInteract";
+import ToolTabs from "../../components/shared/ToolTabs";
+
+const ITEMS = [
+  {
+    key: "token-interact",
+    label: "通用合约交互",
+    children: <TokenInteract />,
+  },
+  {
+    key: "erc20-balance",
+    label: "ERC20 余额",
+    children: <ERC20Balance />,
+  },
+  {
+    key: "erc721-balance",
+    label: "ERC721 余额",
+    children: <ERC721Balance />,
+  },
+  {
+    key: "erc1155-balance",
+    label: "ERC1155 余额",
+    children: <ERC1155Balance />,
+  },
+  {
+    key: "general-interact",
+    label: "通用调用",
+    children: <GeneralInteract />,
+  },
+];
 
 export default function EtherTokenTab() {
-  // 确保组件名称以大写字母开头
-  const [index, setIndex] = useState("A");
-
-  const handleChange = (event, newIndex) => {
-    setIndex(newIndex);
-  };
-
   return (
-    <>
-      <TokenInteract />
-    </>
+    <ToolTabs
+      title="代币交互中心"
+      description="聚合 ERC20/ERC721/ERC1155 余额查询与通用 ABI 调用能力。"
+      items={ITEMS}
+      defaultActiveKey="token-interact"
+    />
   );
 }
