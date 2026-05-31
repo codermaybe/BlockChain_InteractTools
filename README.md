@@ -50,7 +50,7 @@ docs/                      # 架构与任务文档
 
 ## 环境要求
 
-- Node.js >= 20.18
+- Node.js >= 20.19.0
 - npm >= 9
 - Rust stable toolchain
 - Tauri 对应平台依赖
