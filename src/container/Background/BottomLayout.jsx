@@ -1,99 +1,29 @@
 import React, { useState } from "react";
 import { Badge, Button, Divider, Layout, Menu, Result, Space, Tag, Typography } from "antd";
-import {
-  AppstoreOutlined,
-  LinkOutlined,
-  MailOutlined,
-  ThunderboltOutlined,
-  SettingOutlined,
-  UnorderedListOutlined,
-} from "@ant-design/icons";
-
-// 引入功能组件
-import EthersTab from "../EtherContain/EthersTab";
-import EtherTokenTab from "../EtherContain/EtherTokenTab";
-import WalletBasicTab from "../EtherContain/WalletBasicTab";
-import WalletUpgrateTab from "../EtherContain/WalletUpgrateTab";
-import SolanaTab from "../SolanaContain/SolanaTab";
-import BatchToolTab from "../BatchContain/BatchToolTab";
+import { LinkOutlined, SettingOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import GlobalSettingsDrawer from "../../components/shared/GlobalSettingsDrawer";
 import TaskLogDrawer from "../../components/shared/TaskLogDrawer";
 import { useAppSettings } from "../../state/AppSettingsContext";
 import { useTaskLog } from "../../state/TaskLogContext";
 import { getEvmChainByKey } from "../../config/chainRegistry";
+import {
+  DEFAULT_ACTIVE_KEY,
+  DEFAULT_OPEN_KEYS,
+  MENU_ITEMS,
+  getToolContent,
+  getToolLabel,
+} from "../../config/toolNavigation.jsx";
 
 const { Title, Paragraph } = Typography;
 const { Sider, Content, Header } = Layout;
-
-// 菜单配置
-const MENU_ITEMS = [
-  {
-    key: "ethereum",
-    label: "以太坊",
-    icon: <MailOutlined />,
-    children: [
-      {
-        key: "group1",
-        type: "group",
-        label: "简单交互",
-        children: [
-          { key: "eth-balance", label: "ETH查询余额" },
-          { key: "token-interaction", label: "代币函数调用" },
-        ],
-      },
-      {
-        key: "group3",
-        type: "group",
-        label: "钱包",
-        children: [
-          { key: "wallet-basicfunction", label: "基础功能" },
-          { key: "wallet-upgratefunction", label: "进阶功能" },
-        ],
-      },
-    ],
-  },
-  {
-    key: "solana",
-    label: "Solana",
-    icon: <AppstoreOutlined />,
-    children: [{ key: "sol-balance", label: "余额查询" }],
-  },
-  {
-    key: "efficiency",
-    label: "效率工具",
-    icon: <ThunderboltOutlined />,
-    children: [{ key: "batch-suite", label: "批量任务工作台" }],
-  },
-];
-
-// 内容映射配置
-const CONTENT_COMPONENTS = {
-  "eth-balance": <EthersTab />,
-  "token-interaction": <EtherTokenTab />,
-  "wallet-basicfunction": <WalletBasicTab />,
-  "wallet-upgratefunction": <WalletUpgrateTab />,
-  "sol-balance": <SolanaTab />,
-  "batch-suite": <BatchToolTab />,
-};
-
-function findLabelByKey(items, targetKey) {
-  for (const item of items) {
-    if (item.key === targetKey) return item.label;
-    if (item.children) {
-      const found = findLabelByKey(item.children, targetKey);
-      if (found) return found;
-    }
-  }
-  return "";
-}
 
 const BottomLayout = () => {
   const settings = useAppSettings();
   const { errorCount } = useTaskLog();
 
   // 状态管理
-  const [activeKey, setActiveKey] = useState("eth-balance");
-  const [openKeys, setOpenKeys] = useState(["ethereum", "efficiency"]);
+  const [activeKey, setActiveKey] = useState(DEFAULT_ACTIVE_KEY);
+  const [openKeys, setOpenKeys] = useState(DEFAULT_OPEN_KEYS);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
 
@@ -107,16 +37,8 @@ const BottomLayout = () => {
     setOpenKeys(keys);
   };
 
-  // 渲染内容区域
-  const renderContent = () => {
-    return (
-      CONTENT_COMPONENTS[activeKey] || (
-        <Result status="404" title="功能开发中" />
-      )
-    );
-  };
-
-  const activeLabel = findLabelByKey(MENU_ITEMS, activeKey) || "功能开发中";
+  const activeContent = getToolContent(activeKey);
+  const activeLabel = getToolLabel(activeKey) || "功能开发中";
   const defaultChainName = getEvmChainByKey(
     settings.preferredEvmChainKey || settings.preferredChainKey
   ).name;
@@ -179,7 +101,7 @@ const BottomLayout = () => {
         </Header>
         <Content className="min-h-0 flex-1 overflow-y-auto p-2 md:p-3">
           <div className="workbench-surface min-h-full p-3 md:p-4">
-            {renderContent()}
+            {activeContent || <Result status="404" title="功能开发中" />}
           </div>
         </Content>
       </Layout>
