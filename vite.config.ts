@@ -1,5 +1,4 @@
 import { defineConfig, loadEnv } from 'vite';
-import type { Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // Keep dev server on 9754 to match Tauri config
@@ -23,25 +22,8 @@ export default defineConfig(({ mode }) => {
     }
   }
 
-  const jsAsJsx: Plugin = {
-    name: 'js-as-jsx-transform',
-    enforce: 'pre',
-    async transform(code, id) {
-      if (!id.endsWith('.js')) return null;
-      // only transform source files
-      if (!(id.includes('/src/') || id.includes('\\src\\'))) return null;
-      const esbuild = await import('esbuild');
-      const result = await esbuild.transform(code, {
-        loader: 'jsx',
-        jsx: 'automatic',
-        sourcemap: true,
-      });
-      return { code: result.code, map: result.map };
-    },
-  };
-
   return {
-    plugins: [jsAsJsx, react()],
+    plugins: [react()],
     server: {
       port: 9754,
       strictPort: true,
