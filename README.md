@@ -82,6 +82,14 @@ Vite 开发端口固定为 `9754`，与 `src-tauri/tauri.conf.json` 的 `devUrl`
 ## 验证命令
 
 ```bash
+npm run verify:ci
+```
+
+`verify:ci` 会按 GitHub CI 的顺序执行 `npm ci --ignore-scripts`、lint、test 和 Vite build，用来在推送前提前发现 lockfile 失配与静态检查问题。
+
+也可以单独运行：
+
+```bash
 npm run lint
 npm test
 npm run build:vite
@@ -104,10 +112,10 @@ npm run tauri:build
 常规开发建议先确保本地通过：
 
 ```bash
-npm run lint
-npm test
-npm run build:vite
+npm run verify:ci
 ```
+
+项目使用 Husky 配置了 `pre-push` hook。执行过 `npm install` 后，`git push` 会自动先运行 `npm run verify:ci`，失败时不会推送到 GitHub。
 
 ## 版本与发版
 

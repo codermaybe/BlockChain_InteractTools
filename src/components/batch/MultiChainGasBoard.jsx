@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, Select, Space, Switch, Table, Tag, Typography, message } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { ethers } from "ethers";
@@ -28,7 +28,7 @@ export default function MultiChainGasBoard() {
     []
   );
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     addLog({
       level: "info",
@@ -97,17 +97,17 @@ export default function MultiChainGasBoard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addLog, chainKeys, settings]);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   useEffect(() => {
     if (!autoRefresh) return undefined;
     const timer = setInterval(loadData, intervalSec * 1000);
     return () => clearInterval(timer);
-  }, [autoRefresh, intervalSec]);
+  }, [autoRefresh, intervalSec, loadData]);
 
   return (
     <Card title="多链 Gas 面板">

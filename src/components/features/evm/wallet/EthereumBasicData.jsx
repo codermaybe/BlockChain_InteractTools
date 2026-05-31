@@ -85,7 +85,7 @@ export default function EthereumBasicData() {
     }
   }, [provider, chain.chainKey, addLog]);
 
-  const initProvider = async (nextChainKey, nextRpc) => {
+  const initProvider = useCallback(async (nextChainKey, nextRpc) => {
     try {
       const { provider: p } = createJsonRpcProvider(nextChainKey, nextRpc, true);
       const probe = await probeProvider(p);
@@ -101,11 +101,11 @@ export default function EthereumBasicData() {
       setProvider(null);
       message.error(`初始化 provider 失败: ${error?.message || "未知错误"}`);
     }
-  };
+  }, [addLog]);
 
   useEffect(() => {
     initProvider(chain.chainKey, chain.rpc);
-  }, []);
+  }, [chain.chainKey, chain.rpc, initProvider]);
 
   useEffect(() => {
     let dataTimer;

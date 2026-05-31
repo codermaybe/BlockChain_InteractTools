@@ -14,7 +14,7 @@ export default function UnitConverter() {
     try {
       await navigator.clipboard.writeText(val || "");
       message.success("已复制");
-    } catch (e) {
+    } catch {
       message.error("复制失败");
     }
   }, []);
@@ -34,7 +34,7 @@ export default function UnitConverter() {
         setWei(v);
         setGwei(g);
         setEther(e);
-      } catch (_) {
+      } catch {
         // ignore invalid
       }
     },
@@ -55,7 +55,7 @@ export default function UnitConverter() {
         setWei(w);
         setGwei(v);
         setEther(e);
-      } catch (_) {
+      } catch {
         // Ignore invalid intermediate decimal input.
       }
     },
@@ -76,7 +76,7 @@ export default function UnitConverter() {
         setWei(w);
         setGwei(g);
         setEther(v);
-      } catch (_) {
+      } catch {
         // Ignore invalid intermediate decimal input.
       }
     },

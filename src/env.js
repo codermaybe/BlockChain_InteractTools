@@ -20,7 +20,7 @@ export function env(name, fallback = undefined) {
       const v = import.meta.env[viteKey];
       if (v !== undefined) return clean(v);
     }
-  } catch (_) {
+  } catch {
     // Ignore environments where import.meta is unavailable.
   }
 
@@ -29,7 +29,7 @@ export function env(name, fallback = undefined) {
     if (typeof process !== 'undefined' && process.env && process.env[reactKey] !== undefined) {
       return clean(process.env[reactKey]);
     }
-  } catch (_) {
+  } catch {
     // Ignore environments where process is unavailable.
   }
 

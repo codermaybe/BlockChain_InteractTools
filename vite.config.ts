@@ -45,23 +45,32 @@ export default defineConfig(({ mode }) => {
       global: 'globalThis',
       'process.env': defineProcessEnv,
     },
-    optimizeDeps: {
-      esbuildOptions: {
-        define: {
-          global: 'globalThis',
-        },
-      },
-    },
     build: {
       outDir: 'dist',
       rollupOptions: {
         output: {
-          manualChunks: {
-            'vendor-react': ['react', 'react-dom'],
-            'vendor-antd': ['antd', '@ant-design/icons'],
-            'vendor-ethers': ['ethers'],
-            'vendor-solana': ['@solana/web3.js', '@solana/spl-token'],
-            'vendor-web3': ['web3', 'react-moralis'],
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return undefined;
+            const normalizedId = id.replace(/\\/g, '/');
+            if (normalizedId.includes('/react/') || normalizedId.includes('/react-dom/')) {
+              return 'vendor-react';
+            }
+            if (normalizedId.includes('/antd/') || normalizedId.includes('/@ant-design/icons/')) {
+              return 'vendor-antd';
+            }
+            if (normalizedId.includes('/ethers/')) {
+              return 'vendor-ethers';
+            }
+            if (
+              normalizedId.includes('/@solana/web3.js/') ||
+              normalizedId.includes('/@solana/spl-token/')
+            ) {
+              return 'vendor-solana';
+            }
+            if (normalizedId.includes('/web3/') || normalizedId.includes('/react-moralis/')) {
+              return 'vendor-web3';
+            }
+            return undefined;
           },
         },
       },

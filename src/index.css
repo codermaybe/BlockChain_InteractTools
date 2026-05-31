@@ -1,48 +1,49 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.js";
 
-@layer base {
-  html,
-  body,
-  #root {
-    min-height: 100%;
-  }
-
-  body {
-    margin: 0;
-    font-family:
-      "PingFang SC",
-      "Microsoft YaHei",
-      "Noto Sans SC",
-      "Segoe UI",
-      sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    @apply bg-slate-100 text-slate-900;
-  }
-
-  /* 隐藏滚动条但保留滚动能力 */
-  * {
-    scrollbar-width: none;          /* Firefox */
-  }
-  *::-webkit-scrollbar {
-    display: none;                  /* Chrome / Edge / Safari */
-  }
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
-@layer components {
-  .workbench-surface {
-    @apply rounded-2xl border border-slate-200 bg-white/90 shadow-soft backdrop-blur-sm;
-  }
+body {
+  margin: 0;
+  font-family:
+    "PingFang SC",
+    "Microsoft YaHei",
+    "Noto Sans SC",
+    "Segoe UI",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
 
-  .tool-tabs-shell.ant-tabs .ant-tabs-nav {
-    margin-bottom: 8px;
-  }
+/* 隐藏滚动条但保留滚动能力 */
+* {
+  scrollbar-width: none; /* Firefox */
+}
 
-  .tool-tabs-shell.ant-tabs .ant-tabs-content-holder {
-    overflow: visible;
-  }
+*::-webkit-scrollbar {
+  display: none; /* Chrome / Edge / Safari */
+}
+
+.workbench-surface {
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 24px rgba(17, 24, 39, 0.08);
+  backdrop-filter: blur(4px);
+}
+
+.tool-tabs-shell.ant-tabs .ant-tabs-nav {
+  margin-bottom: 8px;
+}
+
+.tool-tabs-shell.ant-tabs .ant-tabs-content-holder {
+  overflow: visible;
 }
 
 /* Sidebar active item highlight */
