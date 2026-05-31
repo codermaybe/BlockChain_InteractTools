@@ -6,6 +6,13 @@ function normalizeConcurrency(value) {
   return Math.min(Math.floor(n), 30);
 }
 
+export function createTaskId() {
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+export const MAX_TASK_ARTIFACTS = 8;
+export const MAX_TASK_VERSIONS = 12;
+
 export async function runTaskQueue({
   items,
   worker,

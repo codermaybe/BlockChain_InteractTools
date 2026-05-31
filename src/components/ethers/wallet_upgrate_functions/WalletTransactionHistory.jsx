@@ -12,40 +12,15 @@ import {
   message,
 } from "antd";
 import { ethers } from "ethers";
+import { createJsonRpcProvider } from "../../../services/evm/providerFactory";
+import { fetchTxList } from "../../../services/explorer/explorerApiService.js";
+import { LOG_CATEGORY } from "../../../config/categories.js";
+import { useChainRpc } from "../../../hooks/useChainRpc.js";
 import { useAppSettings } from "../../../state/AppSettingsContext";
 import { useTaskLog } from "../../../state/TaskLogContext";
+import ChainRpcSelector from "../../../components/shared/ChainRpcSelector.jsx";
 
 const { Title } = Typography;
-
-const NETWORK_OPTIONS = {
-  mainnet: {
-    name: "Ethereum Mainnet",
-    api: "api.etherscan.io",
-    explorer: "https://etherscan.io/tx/",
-    chainKey: "eth-mainnet",
-    chainId: 1,
-  },
-  sepolia: {
-    name: "Sepolia Testnet",
-    api: "api-sepolia.etherscan.io",
-    explorer: "https://sepolia.etherscan.io/tx/",
-    chainKey: "eth-sepolia",
-    chainId: 11155111,
-  },
-  goerli: {
-    name: "Goerli Testnet",
-    api: "api-goerli.etherscan.io",
-    explorer: "https://goerli.etherscan.io/tx/",
-    chainKey: "eth-goerli",
-    chainId: 5,
-  },
-  local: {
-    name: "Local Hardhat",
-    explorer: null,
-    chainKey: "",
-    chainId: 31337,
-  },
-};
 
 const LIMIT_OPTIONS = {
   all: { name: "全部", value: Infinity },
@@ -65,24 +40,13 @@ function formatDate(timestamp) {
   }
 }
 
-function mapPreferredChainToNetwork(chainKey) {
-  if (chainKey === "eth-mainnet") return "mainnet";
-  if (chainKey === "eth-sepolia") return "sepolia";
-  if (chainKey === "eth-goerli") return "goerli";
-  return "mainnet";
-}
-
 export default function WalletTransactionHistory() {
+  const chain = useChainRpc();
   const settings = useAppSettings();
   const { addLog } = useTaskLog();
-  const defaultNetwork = mapPreferredChainToNetwork(settings.preferredChainKey);
   const [address, setAddress] = useState("");
-  const [network, setNetwork] = useState(defaultNetwork);
   const [transactions, setTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [rpcUrl, setRpcUrl] = useState(
-    settings.getResolvedRpc(settings.preferredChainKey)
-  );
   const [transactionLimit, setTransactionLimit] = useState("ten");
   const [customLimit, setCustomLimit] = useState("");
   const [dataSource, setDataSource] = useState("etherscan");
@@ -94,17 +58,7 @@ export default function WalletTransactionHistory() {
         dataIndex: "hash",
         key: "hash",
         render: (text) =>
-          dataSource === "etherscan" && NETWORK_OPTIONS[network].explorer ? (
-            <a
-              href={`${NETWORK_OPTIONS[network].explorer}${text}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {`${text.slice(0, 6)}...${text.slice(-6)}`}
-            </a>
-          ) : (
-            `${text.slice(0, 6)}...${text.slice(-6)}`
-          ),
+          chain.chainKey && text ? `${text.slice(0, 6)}...${text.slice(-6)}` : text,
       },
       {
         title: "时间",
@@ -121,8 +75,7 @@ export default function WalletTransactionHistory() {
         title: "接收者",
         dataIndex: "to",
         key: "to",
-        render: (text) =>
-          text ? `${text.slice(0, 6)}...${text.slice(-6)}` : "创建合约",
+        render: (text) => (text ? `${text.slice(0, 6)}...${text.slice(-6)}` : "创建合约"),
       },
       {
         title: "金额 (ETH)",
@@ -131,7 +84,7 @@ export default function WalletTransactionHistory() {
         render: (text) => ethers.formatEther(text || "0"),
       },
     ],
-    [dataSource, network]
+    [chain.chainKey]
   );
 
   const resolveLimit = () => {
@@ -146,17 +99,14 @@ export default function WalletTransactionHistory() {
       message.error("请输入有效的以太坊地址");
       return false;
     }
-
     if (dataSource === "etherscan" && !settings.etherscanApiKey) {
       message.error("请先填写全局 Etherscan API Key");
       return false;
     }
-
-    if (dataSource === "rpc" && !rpcUrl) {
+    if (dataSource === "rpc" && !chain.rpc) {
       message.error("请输入有效的 RPC URL");
       return false;
     }
-
     if (transactionLimit === "selfdefine" && (!resolveLimit() || resolveLimit() <= 0)) {
       message.error("请输入有效的自定义条目数量");
       return false;
@@ -164,28 +114,8 @@ export default function WalletTransactionHistory() {
     return true;
   };
 
-  const fetchTransactionsByEtherscan = async () => {
-    const pageSize = transactionLimit === "selfdefine" ? resolveLimit() : 1000;
-    const apiDomain = NETWORK_OPTIONS[network].api;
-    const url = `https://${apiDomain}/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=${pageSize}&sort=desc&apikey=${settings.etherscanApiKey}`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`请求失败: ${response.status}`);
-    }
-    const data = await response.json();
-    if (data.status !== "1") throw new Error(data.message || "Etherscan 查询失败");
-
-    const list = data.result.map((tx) => ({
-      ...tx,
-      timestamp: formatDate(tx.timeStamp),
-    }));
-    if (transactionLimit === "ten") return list.slice(0, 10);
-    if (transactionLimit === "selfdefine") return list.slice(0, resolveLimit());
-    return list;
-  };
-
   const fetchTransactionsByRpc = async () => {
-    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const provider = createJsonRpcProvider(chain.chainKey, chain.rpc, true).provider;
     const latestBlock = await provider.getBlockNumber();
     const limit = resolveLimit();
     const startBlock = Math.max(0, latestBlock - limit);
@@ -220,32 +150,47 @@ export default function WalletTransactionHistory() {
     setIsLoading(true);
     addLog({
       level: "info",
-      category: "wallet-history",
+      category: LOG_CATEGORY.TX_HISTORY,
       message: "开始查询交易记录",
-      meta: { dataSource, network, address },
+      meta: { dataSource, chainKey: chain.chainKey, address },
     });
 
     try {
       const records =
         dataSource === "etherscan"
-          ? await fetchTransactionsByEtherscan()
+          ? (await fetchTxList({
+              chainKey: chain.chainKey,
+              address,
+              apiKey: settings.etherscanApiKey,
+              offset: resolveLimit() || 50,
+            })).result.map((tx) => ({
+              ...tx,
+              timestamp: formatDate(tx.timeStamp),
+            }))
           : await fetchTransactionsByRpc();
 
-      setTransactions(records);
+      const nextRecords =
+        transactionLimit === "ten"
+          ? records.slice(0, 10)
+          : transactionLimit === "selfdefine"
+            ? records.slice(0, resolveLimit())
+            : records;
+
+      setTransactions(nextRecords);
       addLog({
         level: "success",
-        category: "wallet-history",
+        category: LOG_CATEGORY.TX_HISTORY,
         message: "交易记录查询完成",
-        meta: { dataSource, network, address, count: records.length },
+        meta: { dataSource, chainKey: chain.chainKey, address, count: nextRecords.length },
       });
-      message.success(`查询成功，共 ${records.length} 条`);
+      message.success(`查询成功，共 ${nextRecords.length} 条`);
     } catch (error) {
       setTransactions([]);
       addLog({
         level: "error",
-        category: "wallet-history",
+        category: LOG_CATEGORY.TX_HISTORY,
         message: "交易记录查询失败",
-        meta: { dataSource, network, address, error: error?.message || "unknown" },
+        meta: { dataSource, chainKey: chain.chainKey, address, error: error?.message || "unknown" },
       });
       message.error(error?.message || "查询失败");
     } finally {
@@ -272,24 +217,9 @@ export default function WalletTransactionHistory() {
             <Radio value="rpc">RPC + Ethers.js</Radio>
           </Radio.Group>
 
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-4">
-            <Select
-              value={network}
-              onChange={(value) => {
-                setNetwork(value);
-                const chainKey = NETWORK_OPTIONS[value]?.chainKey;
-                if (chainKey) {
-                  settings.setPreferredChainKey(chainKey);
-                  setRpcUrl(settings.getResolvedRpc(chainKey));
-                }
-              }}
-              options={Object.entries(NETWORK_OPTIONS).map(([key, config]) => ({
-                value: key,
-                label: config.name,
-              }))}
-              disabled={isLoading}
-            />
+          <ChainRpcSelector {...chain} />
 
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-3">
             <Select
               value={transactionLimit}
               onChange={(value) => setTransactionLimit(value)}
@@ -311,23 +241,11 @@ export default function WalletTransactionHistory() {
               />
             )}
 
-            {dataSource === "etherscan" ? (
+            {dataSource === "etherscan" && (
               <Input.Password
                 placeholder="全局 Etherscan API Key"
                 value={settings.etherscanApiKey}
                 onChange={(e) => settings.setEtherscanApiKey(e.target.value)}
-                disabled={isLoading}
-              />
-            ) : (
-              <Input
-                placeholder="RPC URL"
-                value={rpcUrl}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setRpcUrl(value);
-                  const chainKey = NETWORK_OPTIONS[network]?.chainKey;
-                  if (chainKey) settings.setRpcOverride(chainKey, value);
-                }}
                 disabled={isLoading}
               />
             )}

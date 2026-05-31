@@ -1,40 +1,26 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ethers } from "ethers";
-import { Alert, Button, Card, Input, Select, Space, Typography, message } from "antd";
-import { getChainOptions } from "../../../config/chainRegistry";
+import { Alert, Button, Card, Input, Space, Typography, message } from "antd";
 import { createJsonRpcProvider, probeProvider } from "../../../services/evm/providerFactory";
-import { useAppSettings } from "../../../state/AppSettingsContext";
+import { LOG_CATEGORY } from "../../../config/categories.js";
+import { useChainRpc } from "../../../hooks/useChainRpc.js";
 import { useTaskLog } from "../../../state/TaskLogContext";
+import ChainRpcSelector from "../../../components/shared/ChainRpcSelector.jsx";
 
 const { Text } = Typography;
 
-function GetBalanceByEther() {
-  const settings = useAppSettings();
+export default function GetBalanceByEther() {
+  const chain = useChainRpc();
   const { addLog } = useTaskLog();
-  const [chainKey, setChainKey] = useState(settings.preferredChainKey);
-  const [rpc, setRpc] = useState(settings.getRpcOverride(settings.preferredChainKey));
   const [walletAddress, setWalletAddress] = useState("");
   const [balance, setBalance] = useState("-");
   const [nonce, setNonce] = useState("-");
   const [isLoading, setIsLoading] = useState(false);
   const [rpcStatus, setRpcStatus] = useState("待检测");
 
-  const chainOptions = useMemo(() => getChainOptions(), []);
-
-  const handleChainChange = (value) => {
-    setChainKey(value);
-    settings.setPreferredChainKey(value);
-    setRpc(settings.getRpcOverride(value));
-  };
-
-  const handleRpcChange = (value) => {
-    setRpc(value);
-    settings.setRpcOverride(chainKey, value);
-  };
-
   const checkRpcStatus = async () => {
     try {
-      const { provider } = createJsonRpcProvider(chainKey, rpc, true);
+      const { provider } = createJsonRpcProvider(chain.chainKey, chain.rpc, true);
       await probeProvider(provider);
       setRpcStatus("可用");
       return true;
@@ -53,27 +39,27 @@ function GetBalanceByEther() {
     setIsLoading(true);
     addLog({
       level: "info",
-      category: "eth-balance",
+      category: LOG_CATEGORY.EVM_BALANCE,
       message: "开始查询地址余额",
-      meta: { chainKey, walletAddress },
+      meta: { chainKey: chain.chainKey, walletAddress },
     });
 
     try {
-      const { provider, chain } = createJsonRpcProvider(chainKey, rpc, true);
+      const { provider, chain: chainInfo } = createJsonRpcProvider(chain.chainKey, chain.rpc, true);
       await probeProvider(provider);
       setRpcStatus("可用");
       const [rawBalance, txCount] = await Promise.all([
         provider.getBalance(walletAddress),
         provider.getTransactionCount(walletAddress),
       ]);
-      const v = ethers.formatEther(rawBalance);
-      setBalance(`${v} ${chain.symbol}`);
+      const value = ethers.formatEther(rawBalance);
+      setBalance(`${value} ${chainInfo.symbol}`);
       setNonce(txCount);
       addLog({
         level: "success",
-        category: "eth-balance",
+        category: LOG_CATEGORY.EVM_BALANCE,
         message: "余额查询成功",
-        meta: { chainKey, walletAddress, balance: v, nonce: txCount },
+        meta: { chainKey: chain.chainKey, walletAddress, balance: value, nonce: txCount },
       });
       message.success("查询成功");
     } catch (error) {
@@ -81,9 +67,9 @@ function GetBalanceByEther() {
       setBalance("查询失败");
       addLog({
         level: "error",
-        category: "eth-balance",
+        category: LOG_CATEGORY.EVM_BALANCE,
         message: "余额查询失败",
-        meta: { chainKey, walletAddress, error: error?.message || "unknown" },
+        meta: { chainKey: chain.chainKey, walletAddress, error: error?.message || "unknown" },
       });
       message.error(error?.message || "查询失败");
     } finally {
@@ -101,20 +87,7 @@ function GetBalanceByEther() {
           description="链与 RPC 会自动复用全局配置，避免页面切换重复填写。"
         />
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Text strong>链</Text>
-            <Select options={chainOptions} value={chainKey} onChange={handleChainChange} />
-          </div>
-          <div className="space-y-2 lg:col-span-2">
-            <Text strong>RPC（自动保存）</Text>
-            <Input
-              value={rpc}
-              onChange={(e) => handleRpcChange(e.target.value)}
-              placeholder="可选：自定义 RPC"
-            />
-          </div>
-        </div>
+        <ChainRpcSelector {...chain} />
 
         <Space wrap>
           <Button onClick={checkRpcStatus}>检测 RPC</Button>
@@ -143,5 +116,3 @@ function GetBalanceByEther() {
     </Card>
   );
 }
-
-export default GetBalanceByEther;

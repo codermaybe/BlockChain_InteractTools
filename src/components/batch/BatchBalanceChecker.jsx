@@ -19,13 +19,18 @@ import { ethers } from "ethers";
 import TaskResultTable from "../shared/TaskResultTable";
 import StageActionBar from "../shared/StageActionBar";
 import TaskArtifactCard from "../shared/TaskArtifactCard";
-import { getChainOptions } from "../../config/chainRegistry";
+import { ERC20_MIN_ABI } from "../../config/abis";
+import { getEvmChainOptions } from "../../config/chainRegistry";
 import {
   createJsonRpcProvider,
   probeProvider,
 } from "../../services/evm/providerFactory";
+import { getReadContract } from "../../services/evm/contractService";
 import {
+  createTaskId,
   downloadCsv,
+  MAX_TASK_ARTIFACTS,
+  MAX_TASK_VERSIONS,
   parseLineItems,
   runTaskQueue,
 } from "../../utils/taskRunner";
@@ -34,22 +39,12 @@ import { useTaskLog } from "../../state/TaskLogContext";
 
 const { Text } = Typography;
 
-const ERC20_ABI = [
-  "function balanceOf(address owner) view returns (uint256)",
-  "function decimals() view returns (uint8)",
-  "function symbol() view returns (string)",
-];
-
-function createId() {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
 export default function BatchBalanceChecker() {
   const settings = useAppSettings();
   const { addLog } = useTaskLog();
   const [chainKey, setChainKey] = useState(settings.preferredChainKey);
   const [customRpc, setCustomRpc] = useState(
-    settings.getRpcOverride(settings.preferredChainKey)
+    settings.getEvmRpcOverride(settings.preferredChainKey)
   );
   const [mode, setMode] = useState("native");
   const [tokenAddress, setTokenAddress] = useState("");
@@ -66,7 +61,7 @@ export default function BatchBalanceChecker() {
   const [versions, setVersions] = useState([]);
   const [selectedVersion, setSelectedVersion] = useState("");
 
-  const chainOptions = useMemo(() => getChainOptions(), []);
+  const chainOptions = useMemo(() => getEvmChainOptions(), []);
 
   const createConfigSnapshot = () => ({
     chainKey,
@@ -79,12 +74,12 @@ export default function BatchBalanceChecker() {
 
   const saveVersion = (label) => {
     const snapshot = {
-      id: createId(),
+      id: createTaskId(),
       label,
       createdAt: Date.now(),
       config: createConfigSnapshot(),
     };
-    setVersions((prev) => [snapshot, ...prev].slice(0, 12));
+    setVersions((prev) => [snapshot, ...prev].slice(0, MAX_TASK_VERSIONS));
     return snapshot;
   };
 
@@ -95,7 +90,7 @@ export default function BatchBalanceChecker() {
     setChainKey(config.chainKey);
     settings.setPreferredChainKey(config.chainKey);
     setCustomRpc(config.customRpc);
-    settings.setRpcOverride(config.chainKey, config.customRpc);
+    settings.setEvmRpcOverride(config.chainKey, config.customRpc);
     setMode(config.mode);
     setTokenAddress(config.tokenAddress);
     setAddressesText(config.addressesText);
@@ -104,7 +99,12 @@ export default function BatchBalanceChecker() {
   };
 
   const pushArtifact = (artifact) => {
-    setArtifacts((prev) => [{ id: createId(), createdAt: Date.now(), ...artifact }, ...prev].slice(0, 8));
+    setArtifacts((prev) =>
+      [{ id: createTaskId(), createdAt: Date.now(), ...artifact }, ...prev].slice(
+        0,
+        MAX_TASK_ARTIFACTS
+      )
+    );
   };
 
   const parsePreview = () => {
@@ -168,7 +168,7 @@ export default function BatchBalanceChecker() {
       const probe = await probeProvider(provider);
       let tokenMeta = null;
       if (mode === "erc20") {
-        const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+        const tokenContract = getReadContract(chainKey, tokenAddress, ERC20_MIN_ABI, customRpc);
         const [symbol, decimals] = await Promise.all([
           tokenContract.symbol().catch(() => "ERC20"),
           tokenContract.decimals().catch(() => 18),
@@ -229,7 +229,7 @@ export default function BatchBalanceChecker() {
       let tokenDecimals = 18;
 
       if (mode === "erc20") {
-        tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+        tokenContract = getReadContract(chainKey, tokenAddress, ERC20_MIN_ABI, customRpc);
         const [symbol, decimals] = await Promise.all([
           tokenContract.symbol().catch(() => "ERC20"),
           tokenContract.decimals().catch(() => 18),
@@ -322,13 +322,13 @@ export default function BatchBalanceChecker() {
   const onChangeChain = (value) => {
     setChainKey(value);
     settings.setPreferredChainKey(value);
-    const nextRpc = settings.getRpcOverride(value);
+    const nextRpc = settings.getEvmRpcOverride(value);
     setCustomRpc(nextRpc);
   };
 
   const onChangeRpc = (value) => {
     setCustomRpc(value);
-    settings.setRpcOverride(chainKey, value);
+    settings.setEvmRpcOverride(chainKey, value);
   };
 
   return (

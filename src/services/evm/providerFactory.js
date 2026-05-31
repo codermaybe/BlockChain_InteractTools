@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { getChainByKey, resolveChainRpc } from "../../config/chainRegistry";
+import { getEvmChainByKey, resolveEvmChainRpc } from "../../config/chainRegistry";
 
 const providerCache = new Map();
 
@@ -8,8 +8,8 @@ export function createJsonRpcProvider(
   customRpc = "",
   forceNew = false
 ) {
-  const chain = getChainByKey(chainKey);
-  const rpcUrl = resolveChainRpc(chain.key, customRpc);
+  const chain = getEvmChainByKey(chainKey);
+  const rpcUrl = resolveEvmChainRpc(chain.key, customRpc);
   const cacheKey = `${chain.key}::${rpcUrl}`;
 
   if (!forceNew && providerCache.has(cacheKey)) {

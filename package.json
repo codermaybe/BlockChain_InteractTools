@@ -22,33 +22,24 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-moralis": "^1.4.2",
-    "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4",
     "web3": "^4.16.0"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "dev:vite": "vite",
     "build:vite": "vite build",
     "preview:vite": "vite preview --port 9754",
+    "lint": "eslint src --ext .js,.jsx",
+    "lint:fix": "eslint src --ext .js,.jsx --fix",
     "version": "node scripts/sync-version.js && git add src-tauri/tauri.conf.json src-tauri/Cargo.toml",
     "postversion": "git push && git push --tags"
   },
   "engines": {
     "node": ">=20.18",
     "npm": ">=9"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
   },
   "browserslist": {
     "production": [

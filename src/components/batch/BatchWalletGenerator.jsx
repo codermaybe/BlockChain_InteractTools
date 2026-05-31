@@ -15,7 +15,10 @@ import {
 import { DownloadOutlined, WalletOutlined } from "@ant-design/icons";
 import WalletManager from "../../services/wallet/WalletManager";
 import { downloadCsv } from "../../utils/taskRunner";
+import { LOG_CATEGORY } from "../../config/categories.js";
+import { useSensitiveInput } from "../../hooks/useSensitiveInput.js";
 import { useTaskLog } from "../../state/TaskLogContext";
+import SensitiveField from "../shared/SensitiveField.jsx";
 
 const { Text } = Typography;
 
@@ -30,8 +33,8 @@ export default function BatchWalletGenerator() {
   const [mode, setMode] = useState("random");
   const [count, setCount] = useState(20);
   const [startIndex, setStartIndex] = useState(0);
-  const [mnemonic, setMnemonic] = useState("");
-  const [privateKeysText, setPrivateKeysText] = useState("");
+  const mnemonic = useSensitiveInput();
+  const privateKeysText = useSensitiveInput();
   const [wallets, setWallets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
@@ -67,7 +70,7 @@ export default function BatchWalletGenerator() {
     setLoading(true);
     addLog({
       level: "info",
-      category: "batch-wallet",
+      category: LOG_CATEGORY.BATCH_WALLET,
       message: "开始批量钱包生成",
       meta: { mode, count, startIndex },
     });
@@ -76,15 +79,15 @@ export default function BatchWalletGenerator() {
       if (mode === "random") {
         rows = WalletManager.createRandomWallets(count);
       } else if (mode === "mnemonic") {
-        rows = WalletManager.createFromMnemonic(mnemonic, count, startIndex);
+        rows = WalletManager.createFromMnemonic(mnemonic.getOnce(), count, startIndex);
       } else {
-        rows = WalletManager.createFromPrivateKeyList(privateKeysText);
+        rows = WalletManager.createFromPrivateKeyList(privateKeysText.getOnce());
       }
 
       setWallets(rows);
       addLog({
         level: "success",
-        category: "batch-wallet",
+        category: LOG_CATEGORY.BATCH_WALLET,
         message: "批量钱包生成完成",
         meta: { mode, count: rows.length },
       });
@@ -92,7 +95,7 @@ export default function BatchWalletGenerator() {
     } catch (error) {
       addLog({
         level: "error",
-        category: "batch-wallet",
+        category: LOG_CATEGORY.BATCH_WALLET,
         message: "批量钱包生成失败",
         meta: { mode, error: error?.message || "unknown" },
       });
@@ -109,15 +112,8 @@ export default function BatchWalletGenerator() {
     }
 
     const rows = [
-      ["index", "address", "privateKey", "source", "derivationPath", "mnemonic"],
-      ...wallets.map((item) => [
-        item.index,
-        item.address,
-        item.privateKey,
-        item.source,
-        item.derivationPath,
-        item.mnemonic,
-      ]),
+      ["index", "address", "source", "derivationPath"],
+      ...wallets.map((item) => [item.index, item.address, item.source, item.derivationPath]),
     ];
     downloadCsv("batch-wallets.csv", rows);
   };
@@ -163,19 +159,21 @@ export default function BatchWalletGenerator() {
         )}
 
         {mode === "mnemonic" && (
-          <Input.TextArea
-            rows={3}
-            value={mnemonic}
-            onChange={(e) => setMnemonic(e.target.value)}
+          <SensitiveField
+            {...mnemonic}
+            multiline
+            showWarning={false}
+            label="助记词"
             placeholder="输入助记词（12/24词）"
           />
         )}
 
         {mode === "private-key-list" && (
-          <Input.TextArea
-            rows={5}
-            value={privateKeysText}
-            onChange={(e) => setPrivateKeysText(e.target.value)}
+          <SensitiveField
+            {...privateKeysText}
+            multiline
+            showWarning={false}
+            label="私钥列表"
             placeholder="每行一个私钥，支持 0x 开头或纯十六进制"
           />
         )}

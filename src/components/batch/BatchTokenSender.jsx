@@ -18,27 +18,26 @@ import { ethers } from "ethers";
 import TaskResultTable from "../shared/TaskResultTable";
 import StageActionBar from "../shared/StageActionBar";
 import TaskArtifactCard from "../shared/TaskArtifactCard";
-import { getChainOptions } from "../../config/chainRegistry";
+import { ERC20_MIN_ABI } from "../../config/abis";
+import { getEvmChainOptions } from "../../config/chainRegistry";
 import {
   createJsonRpcProvider,
   probeProvider,
 } from "../../services/evm/providerFactory";
-import { downloadCsv, parseLineItems, runTaskQueue } from "../../utils/taskRunner";
+import { getReadContract, getWriteContract } from "../../services/evm/contractService";
+import { createSigner } from "../../services/evm/signerFactory";
+import {
+  createTaskId,
+  downloadCsv,
+  MAX_TASK_ARTIFACTS,
+  MAX_TASK_VERSIONS,
+  parseLineItems,
+  runTaskQueue,
+} from "../../utils/taskRunner";
 import { useAppSettings } from "../../state/AppSettingsContext";
 import { useTaskLog } from "../../state/TaskLogContext";
 
 const { Text } = Typography;
-
-const ERC20_SEND_ABI = [
-  "function transfer(address to, uint256 amount) returns (bool)",
-  "function decimals() view returns (uint8)",
-  "function symbol() view returns (string)",
-  "function balanceOf(address owner) view returns (uint256)",
-];
-
-function createId() {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
 
 function parseRecipients(text) {
   return parseLineItems(text).map((line, index) => {
@@ -52,7 +51,7 @@ export default function BatchTokenSender() {
   const settings = useAppSettings();
   const { addLog } = useTaskLog();
   const [chainKey, setChainKey] = useState(settings.preferredChainKey);
-  const [customRpc, setCustomRpc] = useState(settings.getRpcOverride(settings.preferredChainKey));
+  const [customRpc, setCustomRpc] = useState(settings.getEvmRpcOverride(settings.preferredChainKey));
   const [privateKey, setPrivateKey] = useState("");
   const [assetType, setAssetType] = useState("native");
   const [tokenAddress, setTokenAddress] = useState("");
@@ -68,7 +67,7 @@ export default function BatchTokenSender() {
   const [versions, setVersions] = useState([]);
   const [selectedVersion, setSelectedVersion] = useState("");
 
-  const chainOptions = useMemo(() => getChainOptions(), []);
+  const chainOptions = useMemo(() => getEvmChainOptions(), []);
 
   const createConfigSnapshot = () => ({
     chainKey,
@@ -81,12 +80,12 @@ export default function BatchTokenSender() {
 
   const saveVersion = (label) => {
     const snapshot = {
-      id: createId(),
+      id: createTaskId(),
       label,
       createdAt: Date.now(),
       config: createConfigSnapshot(),
     };
-    setVersions((prev) => [snapshot, ...prev].slice(0, 12));
+    setVersions((prev) => [snapshot, ...prev].slice(0, MAX_TASK_VERSIONS));
     return snapshot;
   };
 
@@ -97,7 +96,7 @@ export default function BatchTokenSender() {
     setChainKey(config.chainKey);
     settings.setPreferredChainKey(config.chainKey);
     setCustomRpc(config.customRpc);
-    settings.setRpcOverride(config.chainKey, config.customRpc);
+    settings.setEvmRpcOverride(config.chainKey, config.customRpc);
     setPrivateKey(config.privateKey);
     setAssetType(config.assetType);
     setTokenAddress(config.tokenAddress);
@@ -106,19 +105,24 @@ export default function BatchTokenSender() {
   };
 
   const pushArtifact = (artifact) => {
-    setArtifacts((prev) => [{ id: createId(), createdAt: Date.now(), ...artifact }, ...prev].slice(0, 8));
+    setArtifacts((prev) =>
+      [{ id: createTaskId(), createdAt: Date.now(), ...artifact }, ...prev].slice(
+        0,
+        MAX_TASK_ARTIFACTS
+      )
+    );
   };
 
   const onChangeChain = (value) => {
     setChainKey(value);
     settings.setPreferredChainKey(value);
-    const nextRpc = settings.getRpcOverride(value);
+    const nextRpc = settings.getEvmRpcOverride(value);
     setCustomRpc(nextRpc);
   };
 
   const onChangeRpc = (value) => {
     setCustomRpc(value);
-    settings.setRpcOverride(chainKey, value);
+    settings.setEvmRpcOverride(chainKey, value);
   };
 
   const buildPreview = () => {
@@ -176,16 +180,17 @@ export default function BatchTokenSender() {
 
       const { provider } = createJsonRpcProvider(chainKey, customRpc, true);
       const probe = await probeProvider(provider);
-      const sender = new ethers.Wallet(privateKey.trim(), provider);
-      const nativeBalance = await provider.getBalance(sender.address);
+      const sender = createSigner(chainKey, privateKey.trim(), customRpc);
+      const senderAddress = await sender.getAddress();
+      const nativeBalance = await provider.getBalance(senderAddress);
 
       let tokenMeta = null;
       if (assetType === "erc20") {
-        const tokenContract = new ethers.Contract(tokenAddress, ERC20_SEND_ABI, provider);
+        const tokenContract = getReadContract(chainKey, tokenAddress, ERC20_MIN_ABI, customRpc);
         const [symbol, decimals, tokenBalance] = await Promise.all([
           tokenContract.symbol().catch(() => "ERC20"),
           tokenContract.decimals().catch(() => 18),
-          tokenContract.balanceOf(sender.address).catch(() => 0n),
+          tokenContract.balanceOf(senderAddress).catch(() => 0n),
         ]);
         tokenMeta = {
           symbol,
@@ -197,7 +202,7 @@ export default function BatchTokenSender() {
       const data = {
         chainId: probe.chainId,
         blockNumber: probe.blockNumber,
-        senderAddress: sender.address,
+        senderAddress,
         nativeBalance: ethers.formatEther(nativeBalance),
         tokenMeta,
       };
@@ -237,15 +242,14 @@ export default function BatchTokenSender() {
     setRows([]);
     try {
       const preview = previewData || buildPreview();
-      const { provider } = createJsonRpcProvider(chainKey, customRpc, true);
-      const sender = new ethers.Wallet(privateKey.trim(), provider);
+      const sender = createSigner(chainKey, privateKey.trim(), customRpc);
 
       let symbol = "ETH";
       let decimals = 18;
       let tokenContract = null;
 
       if (assetType === "erc20") {
-        tokenContract = new ethers.Contract(tokenAddress, ERC20_SEND_ABI, sender);
+        tokenContract = getWriteContract(tokenAddress, ERC20_MIN_ABI, sender);
         const [tokenSymbol, tokenDecimals] = await Promise.all([
           tokenContract.symbol().catch(() => "ERC20"),
           tokenContract.decimals().catch(() => 18),

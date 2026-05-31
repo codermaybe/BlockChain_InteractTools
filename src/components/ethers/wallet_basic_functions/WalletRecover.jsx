@@ -1,61 +1,57 @@
-import { Button, Input, Card, message, Divider } from "antd";
+import { Button, Card, Divider, Input, Space, message } from "antd";
 import { ethers } from "ethers";
 import { useState } from "react";
+import { useSensitiveInput } from "../../../hooks/useSensitiveInput.js";
+import SensitiveField from "../../../components/shared/SensitiveField.jsx";
+import WalletManager from "../../../services/wallet/WalletManager";
 
-// 通过助记词恢复钱包
-const WalletRecover = () => {
+export default function WalletRecover() {
+  const mnemonicInput = useSensitiveInput();
+  const privateKeyInput = useSensitiveInput();
   const [wallet, setWallet] = useState({
     privateKey: "",
     address: "",
     mnemonic: "",
   });
-  const [mnemonic, setMnemonic] = useState("");
-  const [privateKey, setPrivateKey] = useState("");
+
+  const recoverFromMnemonic = () => {
+    try {
+      const currentMnemonic = mnemonicInput.getOnce();
+      const recovered = ethers.Wallet.fromPhrase(currentMnemonic);
+      setWallet({
+        privateKey: recovered.privateKey,
+        address: recovered.address,
+        mnemonic: recovered.mnemonic?.phrase || "",
+      });
+    } catch {
+      message.error("助记词错误，请重新输入");
+    }
+  };
+
+  const recoverFromPrivateKey = () => {
+    try {
+      const currentPrivateKey = privateKeyInput.getOnce();
+      const recovered = WalletManager.createFromPrivateKeyList(currentPrivateKey)[0];
+      setWallet({
+        privateKey: recovered.privateKey,
+        address: recovered.address,
+        mnemonic: recovered.mnemonic || "私钥无法恢复助记词",
+      });
+    } catch {
+      message.error("私钥错误，请重新输入");
+    }
+  };
 
   return (
     <>
       <br />
-      <Input.Password
-        placeholder="输入助记词"
-        onChange={(e) => setMnemonic(e.target.value)}
-      />
-      <Button
-        onClick={() => {
-          try {
-            const wallet = ethers.Wallet.fromPhrase(mnemonic);
-            setWallet({
-              privateKey: wallet.privateKey,
-              address: wallet.address,
-              mnemonic: wallet.mnemonic.phrase,
-            });
-          } catch (error) {
-            message.error("助记词错误，请重新输入");
-          }
-        }}
-      >
-        助记词恢复钱包
-      </Button>
+      <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+        <SensitiveField {...mnemonicInput} label="助记词" multiline />
+        <Button onClick={recoverFromMnemonic}>助记词恢复钱包</Button>
 
-      <Input.Password
-        placeholder="输入私钥"
-        onChange={(e) => setPrivateKey(e.target.value)}
-      />
-      <Button
-        onClick={() => {
-          try {
-            const wallet = new ethers.Wallet(privateKey);
-            setWallet({
-              privateKey: wallet.privateKey,
-              address: wallet.address,
-              mnemonic: wallet.mnemonic?.phrase || "私钥无法恢复助记词",
-            });
-          } catch (error) {
-            message.error("私钥错误，请重新输入");
-          }
-        }}
-      >
-        私钥恢复钱包
-      </Button>
+        <SensitiveField {...privateKeyInput} label="私钥" />
+        <Button onClick={recoverFromPrivateKey}>私钥恢复钱包</Button>
+      </Space>
       <Divider style={{ borderColor: "#08EFF9", borderWidth: "1px" }} />
 
       <Card
@@ -64,14 +60,12 @@ const WalletRecover = () => {
           border: "1px solid #1890ff",
         }}
       >
-        <p>钱包地址：{wallet.address}</p>
-        <p>钱包私钥：{wallet.privateKey}</p>
-        <p>
-          钱包助记词：<span style={{ color: "red" }}>{wallet.mnemonic}</span>
-        </p>
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <SensitiveField value={wallet.address} label="钱包地址" readOnly />
+          <SensitiveField value={wallet.privateKey} label="钱包私钥" readOnly />
+          <SensitiveField value={wallet.mnemonic} label="钱包助记词" readOnly multiline />
+        </Space>
       </Card>
     </>
   );
-};
-
-export default WalletRecover;
+}

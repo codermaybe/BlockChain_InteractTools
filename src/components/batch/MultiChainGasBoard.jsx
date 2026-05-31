@@ -4,6 +4,7 @@ import { ReloadOutlined } from "@ant-design/icons";
 import { ethers } from "ethers";
 import { EVM_CHAIN_REGISTRY } from "../../config/chainRegistry";
 import { createJsonRpcProvider } from "../../services/evm/providerFactory";
+import { LOG_CATEGORY } from "../../config/categories.js";
 import { useAppSettings } from "../../state/AppSettingsContext";
 import { useTaskLog } from "../../state/TaskLogContext";
 
@@ -31,13 +32,13 @@ export default function MultiChainGasBoard() {
     setLoading(true);
     addLog({
       level: "info",
-      category: "gas-board",
+      category: LOG_CATEGORY.GAS_BOARD,
       message: "开始刷新多链 Gas 数据",
       meta: { chainCount: chainKeys.length },
     });
     try {
       const tasks = chainKeys.map(async (chainKey) => {
-        const overrideRpc = settings.getRpcOverride(chainKey);
+        const overrideRpc = settings.getEvmRpcOverride(chainKey);
         const { provider, chain, rpcUrl } = createJsonRpcProvider(
           chainKey,
           overrideRpc,
@@ -81,14 +82,14 @@ export default function MultiChainGasBoard() {
       const failedCount = data.filter((item) => item.status !== "ok").length;
       addLog({
         level: failedCount > 0 ? "warning" : "success",
-        category: "gas-board",
+        category: LOG_CATEGORY.GAS_BOARD,
         message: "多链 Gas 数据刷新完成",
         meta: { failedCount, total: data.length },
       });
     } catch (error) {
       addLog({
         level: "error",
-        category: "gas-board",
+        category: LOG_CATEGORY.GAS_BOARD,
         message: "多链 Gas 刷新失败",
         meta: { error: error?.message || "unknown" },
       });

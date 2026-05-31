@@ -2,10 +2,11 @@ import { Select, Table, message, Input, Button, Tooltip, Card, Space, Typography
 import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { ReloadOutlined, QuestionCircleOutlined } from "@ant-design/icons";
-import { getChainOptions } from "../../../config/chainRegistry";
 import { createJsonRpcProvider, probeProvider } from "../../../services/evm/providerFactory";
-import { useAppSettings } from "../../../state/AppSettingsContext";
+import { LOG_CATEGORY } from "../../../config/categories.js";
+import { useChainRpc } from "../../../hooks/useChainRpc.js";
 import { useTaskLog } from "../../../state/TaskLogContext";
+import ChainRpcSelector from "../../../components/shared/ChainRpcSelector.jsx";
 
 const { Text } = Typography;
 
@@ -20,15 +21,13 @@ const EMPTY_ROWS = [
 ];
 
 export default function EthereumBasicData() {
-  const settings = useAppSettings();
+  const chain = useChainRpc();
   const { addLog } = useTaskLog();
   const [provider, setProvider] = useState(null);
   const [data, setData] = useState(EMPTY_ROWS);
   const [loading, setLoading] = useState(false);
   const [selectedInterval, setSelectedInterval] = useState(null);
   const [countdown, setCountdown] = useState(0);
-  const [chainKey, setChainKey] = useState(settings.preferredChainKey);
-  const [rpcUrl, setRpcUrl] = useState(settings.getRpcOverride(settings.preferredChainKey));
 
   const fetchData = useCallback(async () => {
     if (!provider) {
@@ -76,15 +75,15 @@ export default function EthereumBasicData() {
     } catch (error) {
       addLog({
         level: "error",
-        category: "basic-chain-data",
+        category: LOG_CATEGORY.BASIC_CHAIN_DATA,
         message: "基础链数据刷新失败",
-        meta: { chainKey, error: error?.message || "unknown" },
+        meta: { chainKey: chain.chainKey, error: error?.message || "unknown" },
       });
       message.error(`获取数据失败: ${error.message}`);
     } finally {
       setLoading(false);
     }
-  }, [provider, chainKey]);
+  }, [provider, chain.chainKey, addLog]);
 
   const initProvider = async (nextChainKey, nextRpc) => {
     try {
@@ -94,7 +93,7 @@ export default function EthereumBasicData() {
       message.success(`已连接 EVM RPC，chainId=${probe.chainId}`);
       addLog({
         level: "success",
-        category: "basic-chain-data",
+        category: LOG_CATEGORY.BASIC_CHAIN_DATA,
         message: "基础数据模块 RPC 连接成功",
         meta: { chainKey: nextChainKey, chainId: probe.chainId },
       });
@@ -105,7 +104,7 @@ export default function EthereumBasicData() {
   };
 
   useEffect(() => {
-    initProvider(chainKey, rpcUrl);
+    initProvider(chain.chainKey, chain.rpc);
   }, []);
 
   useEffect(() => {
@@ -124,40 +123,18 @@ export default function EthereumBasicData() {
     };
   }, [selectedInterval, fetchData]);
 
-  const handleChainChange = (value) => {
-    setChainKey(value);
-    settings.setPreferredChainKey(value);
-    const nextRpc = settings.getRpcOverride(value);
-    setRpcUrl(nextRpc);
-    initProvider(value, nextRpc);
-  };
-
   const handleRpcChange = (value) => {
-    setRpcUrl(value);
-    settings.setRpcOverride(chainKey, value);
+    chain.onChangeRpc(value);
     setProvider(null);
   };
 
   return (
     <Card title="基础链数据面板">
       <Space direction="vertical" style={{ width: "100%" }}>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Text strong>链</Text>
-            <Select options={getChainOptions()} value={chainKey} onChange={handleChainChange} />
-          </div>
-          <div className="space-y-2 lg:col-span-2">
-            <Text strong>RPC（自动保存）</Text>
-            <Input
-              value={rpcUrl}
-              placeholder="输入 EVM 兼容链 RPC URL"
-              onChange={(e) => handleRpcChange(e.target.value)}
-            />
-          </div>
-        </div>
+        <ChainRpcSelector {...chain} onChangeRpc={handleRpcChange} />
 
         <Space wrap>
-          <Button onClick={() => initProvider(chainKey, rpcUrl)}>连接RPC</Button>
+          <Button onClick={() => initProvider(chain.chainKey, chain.rpc)}>连接RPC</Button>
           <span>
             更新间隔
             <Tooltip title="选择数据自动更新的时间间隔">

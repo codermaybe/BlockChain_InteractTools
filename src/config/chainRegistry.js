@@ -9,6 +9,7 @@ export const EVM_CHAIN_REGISTRY = [
     envKey: "RPC_ETH_MAINNET",
     defaultRpc: "https://eth.llamarpc.com",
     explorerTx: "https://etherscan.io/tx/",
+    explorerApiBase: "https://api.etherscan.io/api",
   },
   {
     key: "eth-sepolia",
@@ -18,6 +19,7 @@ export const EVM_CHAIN_REGISTRY = [
     envKey: "RPC_ETH_SEPOLIA",
     defaultRpc: "https://ethereum-sepolia-rpc.publicnode.com",
     explorerTx: "https://sepolia.etherscan.io/tx/",
+    explorerApiBase: "https://api-sepolia.etherscan.io/api",
   },
   {
     key: "eth-goerli",
@@ -27,6 +29,7 @@ export const EVM_CHAIN_REGISTRY = [
     envKey: "RPC_ETH_GOERLI",
     defaultRpc: "https://ethereum-goerli-rpc.publicnode.com",
     explorerTx: "https://goerli.etherscan.io/tx/",
+    explorerApiBase: "https://api-goerli.etherscan.io/api",
   },
   {
     key: "bsc-mainnet",
@@ -36,6 +39,7 @@ export const EVM_CHAIN_REGISTRY = [
     envKey: "RPC_BSC_MAINNET",
     defaultRpc: "https://bsc-dataseed.binance.org",
     explorerTx: "https://bscscan.com/tx/",
+    explorerApiBase: "https://api.bscscan.com/api",
   },
   {
     key: "base-mainnet",
@@ -45,6 +49,7 @@ export const EVM_CHAIN_REGISTRY = [
     envKey: "RPC_BASE_MAINNET",
     defaultRpc: "https://base-rpc.publicnode.com",
     explorerTx: "https://basescan.org/tx/",
+    explorerApiBase: "https://api.basescan.org/api",
   },
   {
     key: "arbitrum-mainnet",
@@ -54,6 +59,7 @@ export const EVM_CHAIN_REGISTRY = [
     envKey: "RPC_ARBITRUM_MAINNET",
     defaultRpc: "https://arbitrum-one-rpc.publicnode.com",
     explorerTx: "https://arbiscan.io/tx/",
+    explorerApiBase: "https://api.arbiscan.io/api",
   },
   {
     key: "optimism-mainnet",
@@ -63,6 +69,7 @@ export const EVM_CHAIN_REGISTRY = [
     envKey: "RPC_OPTIMISM_MAINNET",
     defaultRpc: "https://optimism-rpc.publicnode.com",
     explorerTx: "https://optimistic.etherscan.io/tx/",
+    explorerApiBase: "https://api-optimistic.etherscan.io/api",
   },
 ];
 
@@ -80,6 +87,7 @@ export const SOLANA_CLUSTER_REGISTRY = [
     envKey: "RPC_SOLANA_MAINNET",
     defaultRpc: "https://api.mainnet-beta.solana.com",
     explorerTx: "https://solscan.io/tx/",
+    explorerApiBase: null,
   },
   {
     key: "sol-devnet",
@@ -89,6 +97,7 @@ export const SOLANA_CLUSTER_REGISTRY = [
     envKey: "RPC_SOLANA_DEVNET",
     defaultRpc: "https://api.devnet.solana.com",
     explorerTx: "https://solscan.io/tx/",
+    explorerApiBase: null,
   },
   {
     key: "sol-testnet",
@@ -98,6 +107,7 @@ export const SOLANA_CLUSTER_REGISTRY = [
     envKey: "RPC_SOLANA_TESTNET",
     defaultRpc: "https://api.testnet.solana.com",
     explorerTx: "https://solscan.io/tx/",
+    explorerApiBase: null,
   },
 ];
 
@@ -150,8 +160,3 @@ export function resolveSolanaRpc(clusterKey, customRpc = "") {
   const cluster = getSolanaClusterByKey(clusterKey);
   return env(cluster.envKey, cluster.defaultRpc);
 }
-
-// Backward compatible aliases for existing EVM modules.
-export const getChainByKey = getEvmChainByKey;
-export const getChainOptions = getEvmChainOptions;
-export const resolveChainRpc = resolveEvmChainRpc;

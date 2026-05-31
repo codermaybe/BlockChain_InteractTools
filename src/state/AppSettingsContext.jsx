@@ -130,44 +130,13 @@ export function AppSettingsProvider({ children }) {
           };
         });
       },
-      setRpcOverride: (chainKey, rpc) => {
-        const chain = getEvmChainByKey(chainKey);
-        const value = (rpc || "").trim();
-        setSettings((prev) => {
-          const nextEvm = { ...prev.rpcOverrides.evm };
-          if (!value) {
-            delete nextEvm[chain.key];
-          } else {
-            nextEvm[chain.key] = value;
-          }
-          return {
-            ...prev,
-            rpcOverrides: {
-              ...prev.rpcOverrides,
-              evm: nextEvm,
-            },
-          };
-        });
-      },
       getEvmRpcOverride: (chainKey) => {
-        const chain = getEvmChainByKey(chainKey);
-        return settings.rpcOverrides?.evm?.[chain.key] || "";
-      },
-      getRpcOverride: (chainKey) => {
         const chain = getEvmChainByKey(chainKey);
         return settings.rpcOverrides?.evm?.[chain.key] || "";
       },
       getResolvedEvmRpc: (chainKey, customRpc = "") => {
         if ((customRpc || "").trim()) return customRpc.trim();
         const chain = getEvmChainByKey(chainKey || settings.preferredEvmChainKey);
-        const override = settings.rpcOverrides?.evm?.[chain.key] || "";
-        return resolveEvmChainRpc(chain.key, override);
-      },
-      getResolvedRpc: (chainKey, customRpc = "") => {
-        if ((customRpc || "").trim()) return customRpc.trim();
-        const chain = getEvmChainByKey(
-          chainKey || settings.preferredEvmChainKey || settings.preferredChainKey
-        );
         const override = settings.rpcOverrides?.evm?.[chain.key] || "";
         return resolveEvmChainRpc(chain.key, override);
       },

@@ -1,45 +1,29 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ethers } from "ethers";
-import { Alert, Button, Card, Input, Select, Space, Typography, message } from "antd";
+import { Alert, Button, Card, Input, Space, Typography, message } from "antd";
 import { SendOutlined } from "@ant-design/icons";
-import { getChainOptions } from "../../../config/chainRegistry";
 import { createJsonRpcProvider, probeProvider } from "../../../services/evm/providerFactory";
-import { useAppSettings } from "../../../state/AppSettingsContext";
+import { createSigner } from "../../../services/evm/signerFactory.js";
+import { LOG_CATEGORY } from "../../../config/categories.js";
+import { useChainRpc } from "../../../hooks/useChainRpc.js";
+import { useSensitiveInput } from "../../../hooks/useSensitiveInput.js";
 import { useTaskLog } from "../../../state/TaskLogContext";
+import ChainRpcSelector from "../../../components/shared/ChainRpcSelector.jsx";
+import SensitiveField from "../../../components/shared/SensitiveField.jsx";
 
 const { Text } = Typography;
 
 export default function WalletTransfer() {
-  const settings = useAppSettings();
+  const chain = useChainRpc();
+  const privateKey = useSensitiveInput();
   const { addLog } = useTaskLog();
-  const [chainKey, setChainKey] = useState(settings.preferredChainKey);
-  const [rpc, setRpc] = useState(settings.getRpcOverride(settings.preferredChainKey));
-  const [privateKey, setPrivateKey] = useState("");
   const [targetAddress, setTargetAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [txHash, setTxHash] = useState("");
 
-  const chainOptions = useMemo(() => getChainOptions(), []);
-
-  const handleChainChange = (value) => {
-    setChainKey(value);
-    settings.setPreferredChainKey(value);
-    setRpc(settings.getRpcOverride(value));
-  };
-
-  const handleRpcChange = (value) => {
-    setRpc(value);
-    settings.setRpcOverride(chainKey, value);
-  };
-
   const validateInputs = () => {
-    const rpcLower = (rpc || "").toLowerCase();
-    if (!rpcLower || (!rpcLower.startsWith("http://") && !rpcLower.startsWith("https://"))) {
-      message.error("请输入有效 RPC 地址");
-      return false;
-    }
-    if (!privateKey || privateKey.length < 64) {
+    if (!privateKey.value || privateKey.value.length < 64) {
       message.error("请输入有效私钥");
       return false;
     }
@@ -61,15 +45,15 @@ export default function WalletTransfer() {
     setTxHash("");
     addLog({
       level: "info",
-      category: "wallet-transfer",
+      category: LOG_CATEGORY.WALLET_TRANSFER,
       message: "开始转账",
-      meta: { chainKey, targetAddress, amount },
+      meta: { chainKey: chain.chainKey, targetAddress, amount },
     });
 
     try {
-      const { provider } = createJsonRpcProvider(chainKey, rpc, true);
+      const { provider } = createJsonRpcProvider(chain.chainKey, chain.rpc, true);
       await probeProvider(provider);
-      const wallet = new ethers.Wallet(privateKey, provider);
+      const wallet = createSigner(chain.chainKey, privateKey.getOnce(), chain.rpc);
 
       const balance = await provider.getBalance(wallet.address);
       const amountWei = ethers.parseEther(amount);
@@ -89,17 +73,17 @@ export default function WalletTransfer() {
       setTxHash(txResponse.hash);
       addLog({
         level: "success",
-        category: "wallet-transfer",
+        category: LOG_CATEGORY.WALLET_TRANSFER,
         message: "转账成功",
-        meta: { chainKey, txHash: txResponse.hash, amount, targetAddress },
+        meta: { chainKey: chain.chainKey, txHash: txResponse.hash, amount, targetAddress },
       });
-    } catch (e) {
-      const errorMsg = e?.message || "转账失败";
+    } catch (error) {
+      const errorMsg = error?.message || "转账失败";
       addLog({
         level: "error",
-        category: "wallet-transfer",
+        category: LOG_CATEGORY.WALLET_TRANSFER,
         message: "转账失败",
-        meta: { chainKey, error: errorMsg, targetAddress, amount },
+        meta: { chainKey: chain.chainKey, error: errorMsg, targetAddress, amount },
       });
       message.error(`转账失败: ${errorMsg}`);
     } finally {
@@ -111,33 +95,13 @@ export default function WalletTransfer() {
     <Card title="以太坊转账">
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Alert
-          type="info"
+          type="warning"
           showIcon
-          message="说明"
-          description="链与 RPC 自动复用全局配置。建议先进行小额测试。"
+          message="高风险操作"
+          description="转账会发起真实链上交易。请确认链、RPC、目标地址和金额后再执行，建议先小额测试。"
         />
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Text strong>链</Text>
-            <Select options={chainOptions} value={chainKey} onChange={handleChainChange} />
-          </div>
-          <div className="space-y-2 lg:col-span-2">
-            <Text strong>RPC（自动保存）</Text>
-            <Input
-              value={rpc}
-              onChange={(e) => handleRpcChange(e.target.value)}
-              disabled={isLoading}
-              allowClear
-            />
-          </div>
-        </div>
-        <Input.Password
-          placeholder="私钥"
-          value={privateKey}
-          onChange={(e) => setPrivateKey(e.target.value)}
-          disabled={isLoading}
-          allowClear
-        />
+        <ChainRpcSelector {...chain} disabled={isLoading} />
+        <SensitiveField {...privateKey} label="私钥" showWarning={false} />
         <Input
           placeholder="目标地址 (0x...)"
           value={targetAddress}

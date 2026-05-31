@@ -1,0 +1,15 @@
+export const LOG_CATEGORY = {
+  EVM_BALANCE: "eth-balance",
+  CONTRACT: "contract-balance",
+  WALLET_TRANSFER: "wallet-transfer",
+  EVENT_LISTENER: "event-listener",
+  TX_HISTORY: "wallet-history",
+  BATCH_BALANCE: "batch-balance",
+  BATCH_TRANSFER: "batch-transfer",
+  BATCH_WALLET: "batch-wallet",
+  GAS_BOARD: "gas-board",
+  SOLANA_BALANCE: "solana-balance",
+  BASIC_CHAIN_DATA: "basic-chain-data",
+  ETHERSCAN_BALANCE: "etherscan-balance",
+  ERC20_AGGREGATE: "erc20-aggregate",
+};

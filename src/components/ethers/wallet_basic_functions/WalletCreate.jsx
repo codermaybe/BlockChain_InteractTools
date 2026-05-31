@@ -1,30 +1,18 @@
 import { ethers } from "ethers";
-import { Button, Card, message, QRCode } from "antd";
-import { useState } from "react";
+import { Button, Card, QRCode, Space, message } from "antd";
+import { useSensitiveInput } from "../../../hooks/useSensitiveInput.js";
+import SensitiveField from "../../../components/shared/SensitiveField.jsx";
 
 export default function WalletCreate() {
-  const [walletAddress, setWalletAddress] = useState("");
-  const [walletPrivateKey, setWalletPrivateKey] = useState("");
-  const [walletMnemonic, setWalletMnemonic] = useState("");
+  const walletAddress = useSensitiveInput();
+  const walletPrivateKey = useSensitiveInput();
+  const walletMnemonic = useSensitiveInput();
 
-  // 生成钱包
-  const GenerateWallet = () => {
+  const generateWallet = () => {
     const wallet = ethers.Wallet.createRandom();
-    setWalletAddress(wallet.address);
-    setWalletPrivateKey(wallet.privateKey);
-    setWalletMnemonic(wallet.mnemonic.phrase); // 只取助记词短语
-  };
-
-  // 复制文本到剪贴板
-  const copyToClipboard = (text) => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        message.success("复制成功！");
-      })
-      .catch(() => {
-        message.error("复制失败，请手动复制");
-      });
+    walletAddress.setValue(wallet.address);
+    walletPrivateKey.setValue(wallet.privateKey);
+    walletMnemonic.setValue(wallet.mnemonic?.phrase || "");
   };
 
   return (
@@ -37,44 +25,14 @@ export default function WalletCreate() {
           border: "1px solid #1890ff",
         }}
       >
-        {/* 钱包地址 */}
-        <QRCode value={walletAddress}></QRCode>
-        <p>
-          钱包地址：{walletAddress}
-          <Button
-            type="link"
-            onClick={() => copyToClipboard(walletAddress)}
-            style={{ marginLeft: 8 }}
-          >
-            复制
-          </Button>
-        </p>
-
-        {/* 钱包私钥 */}
-        <p>
-          钱包私钥：{walletPrivateKey}
-          <Button
-            type="link"
-            onClick={() => copyToClipboard(walletPrivateKey)}
-            style={{ marginLeft: 8 }}
-          >
-            复制
-          </Button>
-        </p>
-
-        {/* 钱包助记词 */}
-        <p>
-          钱包助记词：{walletMnemonic}
-          <Button
-            type="link"
-            onClick={() => copyToClipboard(walletMnemonic)}
-            style={{ marginLeft: 8 }}
-          >
-            复制
-          </Button>
-        </p>
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <QRCode value={walletAddress.value} />
+          <SensitiveField {...walletAddress} label="钱包地址" readOnly />
+          <SensitiveField {...walletPrivateKey} label="钱包私钥" readOnly />
+          <SensitiveField {...walletMnemonic} label="钱包助记词" readOnly multiline />
+        </Space>
       </Card>
-      <Button onClick={GenerateWallet} style={{ marginTop: 16 }}>
+      <Button onClick={generateWallet} style={{ marginTop: 16 }}>
         生成钱包地址
       </Button>
     </div>

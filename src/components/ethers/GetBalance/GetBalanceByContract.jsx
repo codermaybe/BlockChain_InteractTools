@@ -1,31 +1,26 @@
 import { Input, Button, Select, message, Card, Space, Typography } from "antd";
 import { useMemo, useState } from "react";
 import { ethers } from "ethers";
-import { getChainOptions } from "../../../config/chainRegistry";
 import { createJsonRpcProvider, probeProvider } from "../../../services/evm/providerFactory";
-import { useAppSettings } from "../../../state/AppSettingsContext";
+import { callFunction, getReadContract } from "../../../services/evm/contractService.js";
+import { LOG_CATEGORY } from "../../../config/categories.js";
+import { useChainRpc } from "../../../hooks/useChainRpc.js";
 import { useTaskLog } from "../../../state/TaskLogContext";
+import ChainRpcSelector from "../../../components/shared/ChainRpcSelector.jsx";
 
 const { Text } = Typography;
 
 export default function GetBalanceByContract() {
-  const settings = useAppSettings();
+  const chain = useChainRpc();
   const { addLog } = useTaskLog();
 
-  const [chainKey, setChainKey] = useState(settings.preferredChainKey);
-  const [rpcUrl, setRpcUrl] = useState(settings.getRpcOverride(settings.preferredChainKey));
-  const [contractAddress, setContractAddress] = useState(
-    "0x8e3403B1385613A90897dACfdA5c9706811FEf92"
-  );
-  const [contractAbi, setContractAbi] = useState(
-    '[{"inputs":[{"internalType":"address","name":"target","type":"address"}],"name":"getBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
-  );
+  const [contractAddress, setContractAddress] = useState("");
+  const [contractAbi, setContractAbi] = useState("");
   const [balance, setBalance] = useState(null);
-  const [targetAddress, setTargetAddress] = useState("0x0");
+  const [targetAddress, setTargetAddress] = useState("");
   const [selectedFunction, setSelectedFunction] = useState(null);
   const [isFetching, setIsFetching] = useState(false);
 
-  const chainOptions = useMemo(() => getChainOptions(), []);
   const abiFunctions = useMemo(() => {
     try {
       const abiJson = JSON.parse(contractAbi);
@@ -34,17 +29,6 @@ export default function GetBalanceByContract() {
       return [];
     }
   }, [contractAbi]);
-
-  const handleChainChange = (value) => {
-    setChainKey(value);
-    settings.setPreferredChainKey(value);
-    setRpcUrl(settings.getRpcOverride(value));
-  };
-
-  const handleRpcChange = (value) => {
-    setRpcUrl(value);
-    settings.setRpcOverride(chainKey, value);
-  };
 
   const getBalanceFromContract = async () => {
     if (!ethers.isAddress(contractAddress)) {
@@ -64,31 +48,35 @@ export default function GetBalanceByContract() {
     setBalance(null);
     addLog({
       level: "info",
-      category: "contract-balance",
+      category: LOG_CATEGORY.CONTRACT,
       message: "开始合约余额查询",
-      meta: { chainKey, contractAddress, targetAddress, selectedFunction },
+      meta: { chainKey: chain.chainKey, contractAddress, targetAddress, selectedFunction },
     });
 
     try {
-      const { provider } = createJsonRpcProvider(chainKey, rpcUrl, true);
+      const { provider } = createJsonRpcProvider(chain.chainKey, chain.rpc, true);
       await probeProvider(provider);
-      const contract = new ethers.Contract(contractAddress, JSON.parse(contractAbi), provider);
-      const result = await contract[selectedFunction](targetAddress);
+      const contract = getReadContract(chain.chainKey, contractAddress, JSON.parse(contractAbi), chain.rpc);
+      const result = await callFunction({
+        contract,
+        fnName: selectedFunction,
+        params: [targetAddress],
+      });
       const formatted = ethers.formatUnits(result, 18);
       setBalance(formatted);
       addLog({
         level: "success",
-        category: "contract-balance",
+        category: LOG_CATEGORY.CONTRACT,
         message: "合约余额查询成功",
-        meta: { chainKey, result: formatted },
+        meta: { chainKey: chain.chainKey, result: formatted },
       });
       message.success("查询成功");
     } catch (error) {
       addLog({
         level: "error",
-        category: "contract-balance",
+        category: LOG_CATEGORY.CONTRACT,
         message: "合约余额查询失败",
-        meta: { chainKey, error: error?.message || "unknown" },
+        meta: { chainKey: chain.chainKey, error: error?.message || "unknown" },
       });
       message.error(error?.message || "查询失败");
     } finally {
@@ -99,16 +87,7 @@ export default function GetBalanceByContract() {
   return (
     <Card title="通过合约函数查询余额">
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Text strong>链</Text>
-            <Select options={chainOptions} value={chainKey} onChange={handleChainChange} />
-          </div>
-          <div className="space-y-2 lg:col-span-2">
-            <Text strong>RPC（自动保存）</Text>
-            <Input value={rpcUrl} onChange={(e) => handleRpcChange(e.target.value)} />
-          </div>
-        </div>
+        <ChainRpcSelector {...chain} />
 
         <Input
           value={contractAddress}

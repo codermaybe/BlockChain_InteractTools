@@ -24,7 +24,10 @@ import {
   probeSolanaConnection,
 } from "../../services/solana/providerFactory";
 import {
+  createTaskId,
   downloadCsv,
+  MAX_TASK_ARTIFACTS,
+  MAX_TASK_VERSIONS,
   parseLineItems,
   runTaskQueue,
 } from "../../utils/taskRunner";
@@ -32,10 +35,6 @@ import { useAppSettings } from "../../state/AppSettingsContext";
 import { useTaskLog } from "../../state/TaskLogContext";
 
 const { Text } = Typography;
-
-function createId() {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
 
 function toPublicKey(address) {
   try {
@@ -139,12 +138,12 @@ export default function SolanaBalanceChecker() {
 
   const saveVersion = (label) => {
     const snapshot = {
-      id: createId(),
+      id: createTaskId(),
       label,
       createdAt: Date.now(),
       config: createConfigSnapshot(),
     };
-    setVersions((prev) => [snapshot, ...prev].slice(0, 12));
+    setVersions((prev) => [snapshot, ...prev].slice(0, MAX_TASK_VERSIONS));
     return snapshot;
   };
 
@@ -164,7 +163,12 @@ export default function SolanaBalanceChecker() {
   };
 
   const pushArtifact = (artifact) => {
-    setArtifacts((prev) => [{ id: createId(), createdAt: Date.now(), ...artifact }, ...prev].slice(0, 8));
+    setArtifacts((prev) =>
+      [{ id: createTaskId(), createdAt: Date.now(), ...artifact }, ...prev].slice(
+        0,
+        MAX_TASK_ARTIFACTS
+      )
+    );
   };
 
   const parsePreview = () => {

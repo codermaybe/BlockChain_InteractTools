@@ -1,14 +1,47 @@
 {
-    "env": {
-      "es2020": true,  // 启用 ES2020 环境，支持 BigInt
-      "browser": true,
-      "node": true
-    },
-    "parserOptions": {
-      "ecmaVersion": 2020,  // 支持 ES2020 语法
-      "sourceType": "module"
-    },
-    "rules": {
-      "no-undef": "error"  // 保持 no-undef 规则
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended"
+  ],
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "plugins": ["react", "react-hooks"],
+  "rules": {
+    "no-console": "error",
+    "no-undef": "error"
+  },
+  "overrides": [
+    {
+      "files": ["src/services/**/*.js", "src/config/**/*.js", "src/utils/**/*.js"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["react", "react-dom", "antd"],
+                "message": "React/UI imports are forbidden in services/, config/, and utils/. Keep these layers pure."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
     }
   }
+}
