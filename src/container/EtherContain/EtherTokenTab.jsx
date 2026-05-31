@@ -1,9 +1,9 @@
 import React from "react";
-import ERC20Balance from "../../components/ethers/GetTokenBalance/ERC20Balance";
-import ERC721Balance from "../../components/ethers/GetTokenBalance/ERC721Balance";
-import ERC1155Balance from "../../components/ethers/GetTokenBalance/ERC1155Balance";
-import GeneralInteract from "../../components/ethers/GetTokenBalance/GeneralInteract";
-import TokenInteract from "../../components/ethers/GetTokenBalance/TokenInteract";
+import ERC20Balance from "../../components/ethers/GetTokenBalance/ERC20Balance.jsx";
+import ERC721Balance from "../../components/ethers/GetTokenBalance/ERC721Balance.jsx";
+import ERC1155Balance from "../../components/ethers/GetTokenBalance/ERC1155Balance.jsx";
+import GeneralInteract from "../../components/ethers/GetTokenBalance/GeneralInteract.jsx";
+import TokenInteract from "../../components/ethers/GetTokenBalance/TokenInteract.jsx";
 import ToolTabs from "../../components/shared/ToolTabs";
 
 const ITEMS = [

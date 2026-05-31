@@ -1,6 +1,6 @@
 import React from "react";
 import ToolTabs from "../../components/shared/ToolTabs";
-import SolanaBalanceChecker from "../../components/solana/SolanaBalanceChecker";
+import SolanaBalanceChecker from "../../components/solana/SolanaBalanceChecker.jsx";
 
 const TAB_ITEMS = [
   {

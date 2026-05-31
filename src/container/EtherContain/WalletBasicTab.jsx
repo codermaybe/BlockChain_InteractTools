@@ -1,8 +1,8 @@
 import React from "react";
-import WalletCreate from "../../components/ethers/wallet_basic_functions/WalletCreate";
-import WalletRecover from "../../components/ethers/wallet_basic_functions/WalletRecover";
-import WalletTransfer from "../../components/ethers/wallet_basic_functions/WalletTransfer";
-import EthereumBasicData from "../../components/ethers/wallet_basic_functions/EthereumBasicData";
+import WalletCreate from "../../components/ethers/wallet_basic_functions/WalletCreate.jsx";
+import WalletRecover from "../../components/ethers/wallet_basic_functions/WalletRecover.jsx";
+import WalletTransfer from "../../components/ethers/wallet_basic_functions/WalletTransfer.jsx";
+import EthereumBasicData from "../../components/ethers/wallet_basic_functions/EthereumBasicData.jsx";
 import ToolTabs from "../../components/shared/ToolTabs";
 
 const ITEMS = [

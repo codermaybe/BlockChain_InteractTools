@@ -1,7 +1,7 @@
 import React from "react";
-import GetBalanceByEther from "../../components/ethers/GetBalance/GetBalanceByEther";
-import GetBalanceByContract from "../../components/ethers/GetBalance/GetBalanceByContract";
-import GetBalanceByEtherscanApi from "../../components/ethers/GetBalance/GetBalanceByEtherscanApi";
+import GetBalanceByEther from "../../components/ethers/GetBalance/GetBalanceByEther.jsx";
+import GetBalanceByContract from "../../components/ethers/GetBalance/GetBalanceByContract.jsx";
+import GetBalanceByEtherscanApi from "../../components/ethers/GetBalance/GetBalanceByEtherscanApi.jsx";
 import UnitConverter from "../../components/ethers/Utils/UnitConverter.jsx";
 import ToolTabs from "../../components/shared/ToolTabs";
 

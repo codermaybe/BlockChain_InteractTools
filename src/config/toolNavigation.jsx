@@ -5,12 +5,12 @@ import {
   ThunderboltOutlined,
 } from "@ant-design/icons";
 
-import EthersTab from "../container/EtherContain/EthersTab";
-import EtherTokenTab from "../container/EtherContain/EtherTokenTab";
-import WalletBasicTab from "../container/EtherContain/WalletBasicTab";
-import WalletUpgrateTab from "../container/EtherContain/WalletUpgrateTab";
-import SolanaTab from "../container/SolanaContain/SolanaTab";
-import BatchToolTab from "../container/BatchContain/BatchToolTab";
+import EthersTab from "../container/EtherContain/EthersTab.jsx";
+import EtherTokenTab from "../container/EtherContain/EtherTokenTab.jsx";
+import WalletBasicTab from "../container/EtherContain/WalletBasicTab.jsx";
+import WalletUpgrateTab from "../container/EtherContain/WalletUpgrateTab.jsx";
+import SolanaTab from "../container/SolanaContain/SolanaTab.jsx";
+import BatchToolTab from "../container/BatchContain/BatchToolTab.jsx";
 
 export const DEFAULT_ACTIVE_KEY = "eth-balance";
 export const DEFAULT_OPEN_KEYS = ["ethereum", "efficiency"];

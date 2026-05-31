@@ -1,7 +1,7 @@
 import React from "react";
-import WalletTransactionHistory from "../../components/ethers/wallet_upgrate_functions/WalletTransactionHistory";
-import ContractEventListener from "../../components/ethers/wallet_upgrate_functions/ContractEventListener";
-import Erc20Aggregator from "../../components/ethers/wallet_upgrate_functions/Erc20Aggregator";
+import WalletTransactionHistory from "../../components/ethers/wallet_upgrate_functions/WalletTransactionHistory.jsx";
+import ContractEventListener from "../../components/ethers/wallet_upgrate_functions/ContractEventListener.jsx";
+import Erc20Aggregator from "../../components/ethers/wallet_upgrate_functions/Erc20Aggregator.jsx";
 import ToolTabs from "../../components/shared/ToolTabs";
 
 const ITEMS = [
