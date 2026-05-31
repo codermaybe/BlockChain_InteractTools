@@ -2,6 +2,7 @@
   "env": {
     "browser": true,
     "es2021": true,
+    "jest": true,
     "node": true
   },
   "extends": [
@@ -19,7 +20,11 @@
   "plugins": ["react", "react-hooks"],
   "rules": {
     "no-console": "error",
-    "no-undef": "error"
+    "no-undef": "error",
+    "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "react-hooks/refs": "off",
+    "react-hooks/set-state-in-effect": "off"
   },
   "overrides": [
     {

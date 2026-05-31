@@ -1,7 +1,7 @@
 import React from "react";
-import WalletTransactionHistory from "../../components/ethers/wallet_upgrate_functions/WalletTransactionHistory.jsx";
-import ContractEventListener from "../../components/ethers/wallet_upgrate_functions/ContractEventListener.jsx";
-import Erc20Aggregator from "../../components/ethers/wallet_upgrate_functions/Erc20Aggregator.jsx";
+import WalletTransactionHistory from "../../components/features/evm/advanced/WalletTransactionHistory.jsx";
+import ContractEventListener from "../../components/features/evm/advanced/ContractEventListener.jsx";
+import Erc20Aggregator from "../../components/features/evm/advanced/Erc20Aggregator.jsx";
 import ToolTabs from "../../components/shared/ToolTabs";
 
 const ITEMS = [
@@ -22,7 +22,7 @@ const ITEMS = [
   },
 ];
 
-export default function WalletUpgrateTab() {
+export default function WalletAdvancedTab() {
   return (
     <ToolTabs
       title="钱包进阶功能"

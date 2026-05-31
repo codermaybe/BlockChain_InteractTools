@@ -20,14 +20,18 @@ export function env(name, fallback = undefined) {
       const v = import.meta.env[viteKey];
       if (v !== undefined) return clean(v);
     }
-  } catch (_) {}
+  } catch (_) {
+    // Ignore environments where import.meta is unavailable.
+  }
 
   // Fallback to CRA-style process.env
   try {
     if (typeof process !== 'undefined' && process.env && process.env[reactKey] !== undefined) {
       return clean(process.env[reactKey]);
     }
-  } catch (_) {}
+  } catch (_) {
+    // Ignore environments where process is unavailable.
+  }
 
   return fallback;
 }

@@ -54,6 +54,25 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-antd': ['antd', '@ant-design/icons'],
+            'vendor-ethers': ['ethers'],
+            'vendor-solana': ['@solana/web3.js', '@solana/spl-token'],
+            'vendor-web3': ['web3', 'react-moralis'],
+          },
+        },
+      },
+    },
+    test: {
+      environment: 'jsdom',
+      globals: true,
+      setupFiles: ['./src/test/setup.js'],
+      coverage: {
+        provider: 'v8',
+      },
     },
   };
 });

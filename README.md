@@ -1,99 +1,154 @@
-# BlockChain_InteractTools
+# BlockChain Interact Tools
 
-面向以太坊等链的交互工具（React + JS + Ethers），已整合 Tauri v2，可直接开发与打包桌面应用。
+Blockchain Interact Tools 是一个面向 EVM 与 Solana 的桌面交互工具箱，前端使用 React + Vite，桌面壳使用 Tauri v2。
 
-**当前状态**
-- 仅保留主分支 `main`，历史快照以 tag 方式保留：`pre-merge-master`、`pre-merge-tauri-version`、发布点 `v0.2.7`。
-- 已迁移到 Vite（保留 CRA 以便回退），Tauri 联动端口为 `9754`。
+当前主线聚焦三件事：链上交互工具、批量任务工作台、桌面端发布流程。
 
-**功能概览（持续完善）**
-- 钱包基础：创建、助记词恢复、转账、基础数据
-  - 参考：`src/components/ethers/wallet_basic_functions/`
-- 钱包增强：事件监听、交易历史、聚合器
-  - 参考：`src/components/ethers/wallet_upgrate_functions/`
-- 余额/代币：ETH 余额、ERC20/721/1155 查询、通用合约交互
-  - 参考：`src/components/ethers/GetBalance/`, `src/components/ethers/GetTokenBalance/`
-- 批量任务工作台：批量钱包生成、批量余额查询、批量转账、多链 Gas 面板
-  - 参考：`src/components/batch/`, `src/container/BatchContain/`
-- 全局配置与日志：跨页面复用链/RPC/API Key，统一查看任务执行日志
-  - 参考：`src/state/`, `src/components/shared/GlobalSettingsDrawer.jsx`, `src/components/shared/TaskLogDrawer.jsx`
-- Solana：工具区规划中（逐步补齐基础查询与批量交互）
+## 功能概览
 
-**目录结构（节选）**
-- `src-tauri/`：Tauri 配置与 Rust 端
-- `src/`：React 前端代码（CRA）
-- `public/`：静态资源（CRA）
-- `package.json`：脚本与依赖（含 `@tauri-apps/cli`）
-- `.env`：本地环境变量（含 `PORT=9754`）
+- EVM 余额与基础查询：原生余额、合约查询、Explorer API、单位换算
+- EVM 钱包工具：创建钱包、恢复钱包、转账、基础链数据
+- EVM 进阶工具：交易历史、合约事件监听、ERC20 归集
+- 合约交互：基于 ABI 的通用读写面板
+- 批量任务：批量钱包生成、批量余额检查、批量转账、多链 Gas 面板
+- Solana：余额查询与批量查询能力
+- 全局能力：RPC 配置、Explorer API Key、任务日志、敏感输入脱敏
+
+## 技术栈
+
+- React 18
+- Vite 5
+- Tauri 2
+- ethers v6
+- @solana/web3.js
+- Ant Design
+- Vitest
+- ESLint
+
+## 目录结构
+
+```text
+src/
+  components/
+    batch/                 # 批量任务工具
+    features/evm/          # EVM 功能组件
+      advanced/            # 进阶钱包/合约工具
+      balance/             # 余额与 Explorer 查询
+      tools/               # EVM 小工具
+      wallet/              # 钱包基础工具
+    shared/                # 共享 UI 组件
+    solana/                # Solana 工具
+  config/                  # 链配置、ABI、日志分类
+  container/               # 页面容器与导航承载
+  hooks/                   # 复用状态与任务 hooks
+  services/                # 链交互服务层
+  state/                   # 全局设置与任务日志
+  utils/                   # 通用工具
+src-tauri/                 # Tauri 配置与 Rust 壳
+docs/                      # 架构与任务文档
+```
 
 ## 环境要求
-- Node.js ≥ 20.18（推荐 20.18.0）与 npm（或 pnpm/yarn 自行替代）
-- Rust 稳定版工具链：`rustup`, `cargo`
-- Windows（开发/打包）：需安装 Visual Studio C++ 构建工具（Desktop development with C++）
 
-## 快速开始
-- 安装依赖：
-  - `npm install`
-- 开发（Vite 浏览器预览，推荐）：
-  - `npm run dev:vite` → `http://localhost:9754`
-- 开发（Tauri 桌面版调试，走 Vite）：
-  - `npm run tauri:dev`
-- 构建（Web 静态站点 via Vite）：
-  - `npm run build:vite` → 输出到 `dist/`
-- 构建（Tauri 桌面应用）：
-  - `npm run tauri:build` → 输出到 `src-tauri/target/release/bundle/`
-- 兼容保留（可选）：
-  - CRA 开发：`npm start`（端口仍取 `.env` 中 `PORT=9754`）
-  - CRA 构建：`npm run build` → `build/`
+- Node.js >= 20.18
+- npm >= 9
+- Rust stable toolchain
+- Tauri 对应平台依赖
 
-## 版本管理（自动同步）
-- 版本统一以 `package.json:1` 为准，执行 `npm version` 自动同步到：
-  - `src-tauri/tauri.conf.json:1` 的 `version`
-  - `src-tauri/Cargo.toml:1` 的 `[package] version`
-- 命令示例：
-  - 补丁升级：`npm version patch`（如 0.2.7 → 0.2.8）
-  - 次版本：`npm version minor`
-  - 主版本：`npm version major`
-- 同步逻辑位于：`scripts/sync-version.js:1`，通过 `package.json` 的 `scripts.version` 钩子自动执行。
+Linux 打包需要 GTK/WebKit 依赖。GitHub Actions 中的 Tauri workflow 已包含 Ubuntu 依赖安装步骤。
 
-## 发版流程（Tag 驱动）
-- 本地执行：`npm version patch|minor|major`
-  - 自动：同步 Tauri 与 Cargo 版本，并创建 commit + tag（含同步的文件）
-  - 自动：执行 `postversion` 推送到远端（含 tag）
-- GitHub Actions（见 `.github/workflows/tauri-release.yml:1`）会在 `v*` tag 触发，三平台打包并发布 Release。
-- 如需夜构产物（不发 Release），参见 `.github/workflows/tauri-nightly.yml:1`。
+## 本地开发
 
-## 关键配置
-- 端口（开发）：
-  - `.env:1` 设置 `PORT=9754`
-  - `src-tauri/tauri.conf.json:6` → `build.devUrl = "http://localhost:9754"`
-- 构建路径（生产）：
-  - Vite 输出 `dist/`（`src-tauri/tauri.conf.json:6` → `build.frontendDist = "../dist"`）
-  - CRA 输出 `build/`（兼容保留）
-- 常用脚本（`package.json:33` 起）：
-  - Vite：`dev:vite`、`build:vite`、`preview:vite`
-  - CRA：`start`、`build`
-  - Tauri：`tauri:dev`、`tauri:build`
+安装依赖：
 
-## 环境变量与外部服务
-- `.env:1` 示例：
-  - `PORT=9754`（开发端口）
-  - 已兼容两种风格：
-    - CRA：`REACT_APP_ganacheAddress`、`REACT_APP_ganacheRpc`、`REACT_APP_BASE_URL`
-    - Vite：`VITE_ganacheAddress`、`VITE_ganacheRpc`、`VITE_BASE_URL`
-  - 代码中已提供兼容读取（见 `src/env.js:1`），可逐步迁移为 `VITE_*`。
-- 如使用 Etherscan API（查询），请自行配置 API Key（可放入 `.env` 以 `REACT_APP_...` 形式）。
-- 访问主网/测试网请配置可靠的 RPC（Infura/Alchemy/自建节点等）。
+```bash
+npm install
+```
 
-## 注意事项与排错
-- 端口占用：如 9754 被占用，修改 `.env` 的 `PORT`，同时更新 `src-tauri/tauri.conf.json` 的 `devUrl`。
-- Tauri 打包失败：确认 Rust 工具链与平台构建依赖安装完整；Windows 需 MSVC。
-- 依赖安装失败：切换国内源或使用 pnpm/yarn；Node 版本需满足 18+。
+启动 Vite：
 
-## 历史与分支
-- 仅保留 `main` 分支，旧分支已清理：`master`、`tauri-version`（合并并入）。
-- 历史快照与发布点：`pre-merge-master`、`pre-merge-tauri-version`、`v0.2.7`。
+```bash
+npm run dev:vite
+```
 
----
+启动 Tauri 桌面开发模式：
 
-欢迎提交问题与建议，后续会继续补充功能与文档（尤其是批量任务、事件监听与交易历史的使用说明）。
+```bash
+npm run tauri:dev
+```
+
+Vite 开发端口固定为 `9754`，与 `src-tauri/tauri.conf.json` 的 `devUrl` 保持一致。
+
+## 验证命令
+
+```bash
+npm run lint
+npm test
+npm run build:vite
+```
+
+Tauri 打包：
+
+```bash
+npm run tauri:build
+```
+
+## CI/CD
+
+项目包含三个 GitHub Actions workflow：
+
+- `.github/workflows/ci.yml`：PR 与 main/master push 的轻量校验，执行 lint、test、Vite build
+- `.github/workflows/tauri-nightly.yml`：main 分支 nightly 桌面产物构建
+- `.github/workflows/tauri-release.yml`：`v*` tag 触发正式 Tauri Release
+
+常规开发建议先确保本地通过：
+
+```bash
+npm run lint
+npm test
+npm run build:vite
+```
+
+## 版本与发版
+
+版本号以 `package.json` 为准，并通过 `npm version` 自动同步到：
+
+- `src-tauri/tauri.conf.json`
+- `src-tauri/Cargo.toml`
+
+发补丁版本：
+
+```bash
+npm version patch
+```
+
+发次版本：
+
+```bash
+npm version minor
+```
+
+`npm version` 会自动：
+
+- 更新 `package.json` 与 `package-lock.json`
+- 运行 `scripts/sync-version.js`
+- 同步 Tauri/Cargo 版本
+- 创建版本 commit
+- 创建 `v*` tag
+- 执行 `git push` 与 `git push --tags`
+
+推送 tag 后会触发 `Tauri Release` workflow。
+
+## 安全约束
+
+- 私钥与助记词不得写入 localStorage、日志、URL、版本快照或默认 CSV 导出
+- 私钥展示必须默认脱敏，高风险显形需要用户确认
+- EVM signer 创建集中在 `services/evm/signerFactory.js`
+- 组件层通过 services/hooks/shared 组合业务，避免直接散落 provider/signer/ABI 逻辑
+
+## 当前状态
+
+- 主线已经切换到 Vite + Tauri v2
+- EVM 功能目录已统一到 `src/components/features/evm/`
+- 已接入 Vitest 单元测试、ESLint 与 GitHub CI
+- 发布由 `npm version` + `v*` tag 驱动

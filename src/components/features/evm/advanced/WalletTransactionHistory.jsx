@@ -12,13 +12,13 @@ import {
   message,
 } from "antd";
 import { ethers } from "ethers";
-import { createJsonRpcProvider } from "../../../services/evm/providerFactory";
-import { fetchTxList } from "../../../services/explorer/explorerApiService.js";
-import { LOG_CATEGORY } from "../../../config/categories.js";
-import { useChainRpc } from "../../../hooks/useChainRpc.js";
-import { useAppSettings } from "../../../state/AppSettingsContext";
-import { useTaskLog } from "../../../state/TaskLogContext";
-import ChainRpcSelector from "../../../components/shared/ChainRpcSelector.jsx";
+import { createJsonRpcProvider } from "../../../../services/evm/providerFactory";
+import { fetchTxList } from "../../../../services/explorer/explorerApiService.js";
+import { LOG_CATEGORY } from "../../../../config/categories.js";
+import { useChainRpc } from "../../../../hooks/useChainRpc.js";
+import { useAppSettings } from "../../../../state/AppSettingsContext";
+import { useTaskLog } from "../../../../state/TaskLogContext";
+import ChainRpcSelector from "../../../shared/ChainRpcSelector.jsx";
 
 const { Title } = Typography;
 

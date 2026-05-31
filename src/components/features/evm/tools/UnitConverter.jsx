@@ -9,7 +9,6 @@ export default function UnitConverter() {
   const [wei, setWei] = useState("");
   const [gwei, setGwei] = useState("");
   const [ether, setEther] = useState("");
-  const [editing, setEditing] = useState(null); // 'wei' | 'gwei' | 'ether' | null
 
   const copy = useCallback(async (val) => {
     try {
@@ -56,7 +55,9 @@ export default function UnitConverter() {
         setWei(w);
         setGwei(v);
         setEther(e);
-      } catch (_) {}
+      } catch (_) {
+        // Ignore invalid intermediate decimal input.
+      }
     },
     []
   );
@@ -75,7 +76,9 @@ export default function UnitConverter() {
         setWei(w);
         setGwei(g);
         setEther(v);
-      } catch (_) {}
+      } catch (_) {
+        // Ignore invalid intermediate decimal input.
+      }
     },
     []
   );
@@ -96,13 +99,11 @@ export default function UnitConverter() {
             placeholder="例如：1000000000000000000"
             value={wei}
             onChange={(e) => {
-              setEditing("wei");
               const v = e.target.value.trim();
               // Only allow digits for wei
               if (/^\d*$/.test(v)) {
                 updateFromWei(v);
               }
-              setEditing(null);
             }}
             addonAfter={<CopyOutlined onClick={() => copy(wei)} />}
           />
@@ -114,13 +115,11 @@ export default function UnitConverter() {
             placeholder="例如：1000000000"
             value={gwei}
             onChange={(e) => {
-              setEditing("gwei");
               const v = e.target.value.trim();
               // allow decimal
               if (/^\d*(?:\.\d*)?$/.test(v)) {
                 updateFromGwei(v);
               }
-              setEditing(null);
             }}
             addonAfter={<CopyOutlined onClick={() => copy(gwei)} />}
           />
@@ -132,12 +131,10 @@ export default function UnitConverter() {
             placeholder="例如：1"
             value={ether}
             onChange={(e) => {
-              setEditing("ether");
               const v = e.target.value.trim();
               if (/^\d*(?:\.\d*)?$/.test(v)) {
                 updateFromEther(v);
               }
-              setEditing(null);
             }}
             addonAfter={<CopyOutlined onClick={() => copy(ether)} />}
           />
@@ -146,4 +143,3 @@ export default function UnitConverter() {
     </div>
   );
 }
-

@@ -3,8 +3,8 @@ import {
   Alert,
   Button,
   Card,
-  Input,
   InputNumber,
+  Modal,
   Radio,
   Space,
   Switch,
@@ -118,6 +118,22 @@ export default function BatchWalletGenerator() {
     downloadCsv("batch-wallets.csv", rows);
   };
 
+  const handleShowPrivateKeyChange = (checked) => {
+    if (!checked) {
+      setShowPrivateKey(false);
+      return;
+    }
+
+    Modal.confirm({
+      title: "高风险操作",
+      content: "即将显示所有私钥明文，请确认当前环境安全且无人旁观。",
+      okText: "确认显示",
+      okType: "danger",
+      cancelText: "取消",
+      onOk: () => setShowPrivateKey(true),
+    });
+  };
+
   return (
     <Card title="批量钱包生成（EVM）">
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -194,7 +210,7 @@ export default function BatchWalletGenerator() {
             <Text>显示私钥</Text>
             <Switch
               checked={showPrivateKey}
-              onChange={setShowPrivateKey}
+              onChange={handleShowPrivateKeyChange}
               checkedChildren="开"
               unCheckedChildren="关"
             />

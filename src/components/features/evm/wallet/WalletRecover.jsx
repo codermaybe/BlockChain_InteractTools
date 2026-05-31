@@ -1,9 +1,9 @@
-import { Button, Card, Divider, Input, Space, message } from "antd";
+import { Button, Card, Divider, Space, message } from "antd";
 import { ethers } from "ethers";
 import { useState } from "react";
-import { useSensitiveInput } from "../../../hooks/useSensitiveInput.js";
-import SensitiveField from "../../../components/shared/SensitiveField.jsx";
-import WalletManager from "../../../services/wallet/WalletManager";
+import { useSensitiveInput } from "../../../../hooks/useSensitiveInput.js";
+import SensitiveField from "../../../shared/SensitiveField.jsx";
+import WalletManager from "../../../../services/wallet/WalletManager";
 
 export default function WalletRecover() {
   const mnemonicInput = useSensitiveInput();

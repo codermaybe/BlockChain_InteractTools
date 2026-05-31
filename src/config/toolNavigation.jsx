@@ -5,10 +5,10 @@ import {
   ThunderboltOutlined,
 } from "@ant-design/icons";
 
-import EthersTab from "../container/EtherContain/EthersTab.jsx";
-import EtherTokenTab from "../container/EtherContain/EtherTokenTab.jsx";
-import WalletBasicTab from "../container/EtherContain/WalletBasicTab.jsx";
-import WalletUpgrateTab from "../container/EtherContain/WalletUpgrateTab.jsx";
+import EthersTab from "../container/EvmContain/EthersTab.jsx";
+import EtherTokenTab from "../container/EvmContain/EtherTokenTab.jsx";
+import WalletBasicTab from "../container/EvmContain/WalletBasicTab.jsx";
+import WalletAdvancedTab from "../container/EvmContain/WalletAdvancedTab.jsx";
 import SolanaTab from "../container/SolanaContain/SolanaTab.jsx";
 import BatchToolTab from "../container/BatchContain/BatchToolTab.jsx";
 
@@ -34,7 +34,7 @@ const TOOL_SECTIONS = [
         label: "钱包",
         tools: [
           { key: "wallet-basicfunction", label: "基础功能", component: WalletBasicTab },
-          { key: "wallet-upgratefunction", label: "进阶功能", component: WalletUpgrateTab },
+          { key: "wallet-advanced", label: "进阶功能", component: WalletAdvancedTab },
         ],
       },
     ],

@@ -19,6 +19,7 @@ import TaskResultTable from "../shared/TaskResultTable";
 import StageActionBar from "../shared/StageActionBar";
 import TaskArtifactCard from "../shared/TaskArtifactCard";
 import { ERC20_MIN_ABI } from "../../config/abis";
+import { LOG_CATEGORY } from "../../config/categories.js";
 import { getEvmChainOptions } from "../../config/chainRegistry";
 import {
   createJsonRpcProvider,
@@ -36,6 +37,8 @@ import {
 } from "../../utils/taskRunner";
 import { useAppSettings } from "../../state/AppSettingsContext";
 import { useTaskLog } from "../../state/TaskLogContext";
+import { useSensitiveInput } from "../../hooks/useSensitiveInput.js";
+import SensitiveField from "../shared/SensitiveField.jsx";
 
 const { Text } = Typography;
 
@@ -52,7 +55,7 @@ export default function BatchTokenSender() {
   const { addLog } = useTaskLog();
   const [chainKey, setChainKey] = useState(settings.preferredChainKey);
   const [customRpc, setCustomRpc] = useState(settings.getEvmRpcOverride(settings.preferredChainKey));
-  const [privateKey, setPrivateKey] = useState("");
+  const privateKey = useSensitiveInput();
   const [assetType, setAssetType] = useState("native");
   const [tokenAddress, setTokenAddress] = useState("");
   const [recipientsText, setRecipientsText] = useState("");
@@ -72,7 +75,6 @@ export default function BatchTokenSender() {
   const createConfigSnapshot = () => ({
     chainKey,
     customRpc,
-    privateKey,
     assetType,
     tokenAddress,
     recipientsText,
@@ -97,7 +99,6 @@ export default function BatchTokenSender() {
     settings.setPreferredChainKey(config.chainKey);
     setCustomRpc(config.customRpc);
     settings.setEvmRpcOverride(config.chainKey, config.customRpc);
-    setPrivateKey(config.privateKey);
     setAssetType(config.assetType);
     setTokenAddress(config.tokenAddress);
     setRecipientsText(config.recipientsText);
@@ -169,7 +170,8 @@ export default function BatchTokenSender() {
         message.warning("请先输入接收任务");
         return;
       }
-      if (!privateKey.trim()) {
+      const currentPrivateKey = privateKey.value.trim();
+      if (!currentPrivateKey) {
         message.error("请输入发送方私钥");
         return;
       }
@@ -180,7 +182,7 @@ export default function BatchTokenSender() {
 
       const { provider } = createJsonRpcProvider(chainKey, customRpc, true);
       const probe = await probeProvider(provider);
-      const sender = createSigner(chainKey, privateKey.trim(), customRpc);
+      const sender = createSigner(chainKey, currentPrivateKey, customRpc);
       const senderAddress = await sender.getAddress();
       const nativeBalance = await provider.getBalance(senderAddress);
 
@@ -219,13 +221,13 @@ export default function BatchTokenSender() {
           : { native: data.nativeBalance },
       });
       message.success("运行检查通过，可执行转账");
-    } catch (error) {
-      addLog({
-        level: "error",
-        category: "batch-transfer",
-        message: "批量转账 Run 检查失败",
-        meta: { chainKey, error: error?.message || "unknown" },
-      });
+      } catch (error) {
+        addLog({
+          level: "error",
+          category: LOG_CATEGORY.BATCH_TRANSFER,
+          message: "批量转账 Run 检查失败",
+          meta: { chainKey, error: error?.message || "unknown" },
+        });
       message.error(error?.message || "运行检查失败");
     } finally {
       setLoadingStage("");
@@ -242,7 +244,7 @@ export default function BatchTokenSender() {
     setRows([]);
     try {
       const preview = previewData || buildPreview();
-      const sender = createSigner(chainKey, privateKey.trim(), customRpc);
+      const sender = createSigner(chainKey, privateKey.getOnce(), customRpc);
 
       let symbol = "ETH";
       let decimals = 18;
@@ -315,7 +317,7 @@ export default function BatchTokenSender() {
       });
       addLog({
         level: failedCount ? "warning" : "success",
-        category: "batch-transfer",
+        category: LOG_CATEGORY.BATCH_TRANSFER,
         message: "批量转账 Apply 完成",
         meta: { chainKey, success: successCount, failed: failedCount },
       });
@@ -323,7 +325,7 @@ export default function BatchTokenSender() {
     } catch (error) {
       addLog({
         level: "error",
-        category: "batch-transfer",
+        category: LOG_CATEGORY.BATCH_TRANSFER,
         message: "批量转账 Apply 失败",
         meta: { chainKey, error: error?.message || "unknown" },
       });
@@ -366,8 +368,7 @@ export default function BatchTokenSender() {
         </div>
 
         <div className="space-y-2">
-          <Text strong>发送方私钥</Text>
-          <Input.Password value={privateKey} onChange={(e) => setPrivateKey(e.target.value)} />
+          <SensitiveField {...privateKey} label="发送方私钥" showWarning={false} />
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-3">

@@ -2,14 +2,14 @@ import { useState } from "react";
 import { ethers } from "ethers";
 import { Alert, Button, Card, Input, Space, Typography, message } from "antd";
 import { SendOutlined } from "@ant-design/icons";
-import { createJsonRpcProvider, probeProvider } from "../../../services/evm/providerFactory";
-import { createSigner } from "../../../services/evm/signerFactory.js";
-import { LOG_CATEGORY } from "../../../config/categories.js";
-import { useChainRpc } from "../../../hooks/useChainRpc.js";
-import { useSensitiveInput } from "../../../hooks/useSensitiveInput.js";
-import { useTaskLog } from "../../../state/TaskLogContext";
-import ChainRpcSelector from "../../../components/shared/ChainRpcSelector.jsx";
-import SensitiveField from "../../../components/shared/SensitiveField.jsx";
+import { createJsonRpcProvider, probeProvider } from "../../../../services/evm/providerFactory";
+import { createSigner } from "../../../../services/evm/signerFactory.js";
+import { LOG_CATEGORY } from "../../../../config/categories.js";
+import { useChainRpc } from "../../../../hooks/useChainRpc.js";
+import { useSensitiveInput } from "../../../../hooks/useSensitiveInput.js";
+import { useTaskLog } from "../../../../state/TaskLogContext";
+import ChainRpcSelector from "../../../shared/ChainRpcSelector.jsx";
+import SensitiveField from "../../../shared/SensitiveField.jsx";
 
 const { Text } = Typography;
 

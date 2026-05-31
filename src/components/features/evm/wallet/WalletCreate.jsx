@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
-import { Button, Card, QRCode, Space, message } from "antd";
-import { useSensitiveInput } from "../../../hooks/useSensitiveInput.js";
-import SensitiveField from "../../../components/shared/SensitiveField.jsx";
+import { Button, Card, QRCode, Space } from "antd";
+import { useSensitiveInput } from "../../../../hooks/useSensitiveInput.js";
+import SensitiveField from "../../../shared/SensitiveField.jsx";
 
 export default function WalletCreate() {
   const walletAddress = useSensitiveInput();

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ethers } from "ethers";
 import { Alert, Button, Card, Form, Input, Space, Table, Tag, message } from "antd";
-import { LOG_CATEGORY } from "../../../config/categories.js";
-import { getReadContract, parseAbi } from "../../../services/evm/contractService.js";
-import { createJsonRpcProvider, probeProvider } from "../../../services/evm/providerFactory";
-import { useChainRpc } from "../../../hooks/useChainRpc.js";
-import { useTaskLog } from "../../../state/TaskLogContext";
-import ChainRpcSelector from "../../../components/shared/ChainRpcSelector.jsx";
+import { LOG_CATEGORY } from "../../../../config/categories.js";
+import { getReadContract, parseAbi } from "../../../../services/evm/contractService.js";
+import { createJsonRpcProvider, probeProvider } from "../../../../services/evm/providerFactory";
+import { useChainRpc } from "../../../../hooks/useChainRpc.js";
+import { useTaskLog } from "../../../../state/TaskLogContext";
+import ChainRpcSelector from "../../../shared/ChainRpcSelector.jsx";
 
 export default function ContractEventListener() {
   const chain = useChainRpc();
