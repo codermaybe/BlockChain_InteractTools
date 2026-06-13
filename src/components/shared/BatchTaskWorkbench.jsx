@@ -14,6 +14,10 @@ export default function BatchTaskWorkbench({
   runText = "运行检查",
   applyText = "执行",
   applyDanger = false,
+  onPreview,
+  onRun,
+  onApply,
+  onRestore,
   onExport,
   extraColumns = [],
   pageSize = 8,
@@ -36,9 +40,9 @@ export default function BatchTaskWorkbench({
         <StageActionBar
           stage={task?.stage}
           loadingStage={task?.loadingStage}
-          onPreview={task?.preview}
-          onRun={task?.runCheck}
-          onApply={task?.apply}
+          onPreview={onPreview ?? task?.preview}
+          onRun={onRun ?? task?.runCheck}
+          onApply={onApply ?? task?.apply}
           previewText={previewText}
           runText={runText}
           applyText={applyText}
@@ -64,7 +68,13 @@ export default function BatchTaskWorkbench({
               value={selectedVersion || undefined}
               onChange={setSelectedVersion}
             />
-            <Button onClick={() => task?.restoreVersion?.(selectedVersion)} disabled={!selectedVersion}>
+            <Button
+              onClick={() => {
+                const snapshot = task?.restoreVersion?.(selectedVersion);
+                if (onRestore) onRestore(snapshot);
+              }}
+              disabled={!selectedVersion}
+            >
               恢复版本
             </Button>
           </Space>

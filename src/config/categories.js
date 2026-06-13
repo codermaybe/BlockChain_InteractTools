@@ -9,6 +9,7 @@ export const LOG_CATEGORY = {
   BATCH_WALLET: "batch-wallet",
   GAS_BOARD: "gas-board",
   SOLANA_BALANCE: "solana-balance",
+  SOLANA_VANITY: "solana-vanity",
   BASIC_CHAIN_DATA: "basic-chain-data",
   ETHERSCAN_BALANCE: "etherscan-balance",
   ERC20_AGGREGATE: "erc20-aggregate",

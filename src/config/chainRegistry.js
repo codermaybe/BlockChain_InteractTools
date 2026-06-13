@@ -1,4 +1,24 @@
-import { env } from "../env";
+// 环境变量读取（仅 Vite，VITE_* 前缀）。按架构约定，环境读取集中在 config 层。
+function readEnv(name, fallback = undefined) {
+  const viteKey = `VITE_${name}`;
+  if (typeof import.meta !== "undefined" && import.meta.env && viteKey in import.meta.env) {
+    const value = import.meta.env[viteKey];
+    if (value !== undefined && value !== null) {
+      if (typeof value !== "string") {
+        return value;
+      }
+      let s = value.trim();
+      if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+        s = s.slice(1, -1);
+      }
+      if (s === "undefined" || s === "null") {
+        return fallback;
+      }
+      return s;
+    }
+  }
+  return fallback;
+}
 
 export const EVM_CHAIN_REGISTRY = [
   {
@@ -137,7 +157,7 @@ export function resolveEvmChainRpc(chainKey, customRpc = "") {
   }
 
   const chain = getEvmChainByKey(chainKey);
-  return env(chain.envKey, chain.defaultRpc);
+  return readEnv(chain.envKey, chain.defaultRpc);
 }
 
 export function getSolanaClusterByKey(clusterKey) {
@@ -158,5 +178,5 @@ export function resolveSolanaRpc(clusterKey, customRpc = "") {
   }
 
   const cluster = getSolanaClusterByKey(clusterKey);
-  return env(cluster.envKey, cluster.defaultRpc);
+  return readEnv(cluster.envKey, cluster.defaultRpc);
 }

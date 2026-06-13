@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Card, Select, Space, Switch, Table, Tag, Typography, message } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { ethers } from "ethers";
-import { EVM_CHAIN_REGISTRY } from "../../config/chainRegistry";
-import { createJsonRpcProvider } from "../../services/evm/providerFactory";
-import { LOG_CATEGORY } from "../../config/categories.js";
-import { useAppSettings } from "../../state/AppSettingsContext";
-import { useTaskLog } from "../../state/TaskLogContext";
+import { EVM_CHAIN_REGISTRY } from "../../../config/chainRegistry";
+import { createJsonRpcProvider } from "../../../services/evm/providerFactory";
+import { LOG_CATEGORY } from "../../../config/categories.js";
+import { useAppSettings } from "../../../state/AppSettingsContext";
+import { useTaskLog } from "../../../state/TaskLogContext";
 
 const { Text } = Typography;
 

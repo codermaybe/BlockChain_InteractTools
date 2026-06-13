@@ -1,8 +1,8 @@
 import React from "react";
-import BatchWalletGenerator from "../../components/batch/BatchWalletGenerator.jsx";
-import BatchBalanceChecker from "../../components/batch/BatchBalanceChecker.jsx";
-import BatchTokenSender from "../../components/batch/BatchTokenSender.jsx";
-import MultiChainGasBoard from "../../components/batch/MultiChainGasBoard.jsx";
+import BatchWalletGenerator from "../../components/features/batch/BatchWalletGenerator.jsx";
+import BatchBalanceChecker from "../../components/features/batch/BatchBalanceChecker.jsx";
+import BatchTokenSender from "../../components/features/batch/BatchTokenSender.jsx";
+import MultiChainGasBoard from "../../components/features/batch/MultiChainGasBoard.jsx";
 import ToolTabs from "../../components/shared/ToolTabs";
 
 const ITEMS = [

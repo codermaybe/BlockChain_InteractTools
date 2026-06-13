@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Alert,
   Button,
@@ -13,12 +13,12 @@ import {
   message,
 } from "antd";
 import { DownloadOutlined, WalletOutlined } from "@ant-design/icons";
-import WalletManager from "../../services/wallet/WalletManager";
-import { downloadCsv } from "../../utils/taskRunner";
-import { LOG_CATEGORY } from "../../config/categories.js";
-import { useSensitiveInput } from "../../hooks/useSensitiveInput.js";
-import { useTaskLog } from "../../state/TaskLogContext";
-import SensitiveField from "../shared/SensitiveField.jsx";
+import WalletManager from "../../../services/wallet/WalletManager";
+import { downloadCsv } from "../../../utils/taskRunner";
+import { LOG_CATEGORY } from "../../../config/categories.js";
+import { useSensitiveInput } from "../../../hooks/useSensitiveInput.js";
+import { useTaskLog } from "../../../state/TaskLogContext";
+import SensitiveField from "../../shared/SensitiveField.jsx";
 
 const { Text } = Typography;
 

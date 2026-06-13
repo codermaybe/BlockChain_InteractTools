@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // Keep dev server on 9754 to match Tauri config
@@ -6,22 +6,6 @@ import react from '@vitejs/plugin-react';
 // Also expose CRA-style env keys used in code (REACT_APP_*).
 
 export default defineConfig(({ mode }) => {
-  // Load .env files so REACT_APP_* variables are available even in Vite
-  const env = loadEnv(mode, process.cwd(), '');
-  const defineProcessEnv: Record<string, string> = {
-    NODE_ENV: JSON.stringify(process.env.NODE_ENV || mode),
-  };
-  const reactAppKeys = [
-    'REACT_APP_ganacheRpc',
-    'REACT_APP_ganacheAddress',
-    'REACT_APP_BASE_URL',
-  ];
-  for (const key of reactAppKeys) {
-    if (env[key] !== undefined) {
-      defineProcessEnv[key] = JSON.stringify(env[key] as string);
-    }
-  }
-
   return {
     plugins: [react()],
     server: {
@@ -43,7 +27,7 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       global: 'globalThis',
-      'process.env': defineProcessEnv,
+      'process.env': { NODE_ENV: JSON.stringify(process.env.NODE_ENV || mode) },
     },
     build: {
       outDir: 'dist',
@@ -66,9 +50,6 @@ export default defineConfig(({ mode }) => {
               normalizedId.includes('/@solana/spl-token/')
             ) {
               return 'vendor-solana';
-            }
-            if (normalizedId.includes('/web3/') || normalizedId.includes('/react-moralis/')) {
-              return 'vendor-web3';
             }
             return undefined;
           },

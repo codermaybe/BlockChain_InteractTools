@@ -35,14 +35,21 @@ function toRows(items, results) {
       (typeof source === "string" ? source : undefined) ||
       `Task ${index + 1}`;
 
+    // worker 可返回原始值（直接作为结果列），或 { text, data } 结构：
+    // text 作为结果列展示，data 内字段平铺到行上，供 extraColumns 取用（如 txHash / extra）。
+    const raw = result.output;
+    const structured = raw && typeof raw === "object" && !Array.isArray(raw);
+    const extra = structured && raw.data && typeof raw.data === "object" ? raw.data : null;
+
     return {
       id: source && typeof source === "object" && source.id ? source.id : createTaskId(),
       index: index + 1,
       task,
       status: result.status,
-      output: result.output,
+      output: structured ? raw.text ?? "" : raw,
       error: result.error,
       durationMs: result.durationMs,
+      ...(extra || {}),
     };
   });
 }

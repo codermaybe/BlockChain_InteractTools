@@ -1,6 +1,6 @@
 {
   "name": "Blockchain_Interact_App",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -17,9 +17,7 @@
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "web-vitals": "^5.3.0",
-    "web3": "^4.16.0"
+    "react-dom": "^18.3.1"
   },
   "scripts": {
     "tauri": "tauri",
